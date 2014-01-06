@@ -155,6 +155,60 @@ class Timesheet
 		);
 	}
 	
+	public function getLoggedUserTimesheetDayTotal($userId, $day)
+	{
+		$domain_da = InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess();
+		
+		$from = $day['year'].'-'.$day['mon'].'-'.$day['mday'].' 00:00:00';
+		$to = $day['year'].'-'.$day['mon'].'-'.$day['mday'].' 23:59:59';
+			
+		$query = $domain_da->execute(
+			'SELECT spenttime
+			FROM innowork_timesheet
+			WHERE userid='.$userId.'
+			AND activitydate >= '.$domain_da->formatText($from).'
+			AND activitydate <= '.$domain_da->formatText($to)
+		);
+		
+		$sum = 0;
+		
+		while (!$query->eof) {
+			$sum = self::sumTime($sum, $query->getFields('spenttime'));
+			$query->moveNext();
+		}
+		
+		return $sum;
+	}
+
+	public function getLoggedUserTimesheetWeekTotal($userId, $day)
+	{
+		$domain_da = InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess();
+	
+		$dateTime = new \DateTime($day['year'].'-'.$day['mon'].'-'.$day['mday']);
+		$week_start = clone $dateTime->modify(('Sunday' == $dateTime->format('l')) ? 'Monday last week' : 'Monday this week');
+		$week_end = clone $dateTime->modify('Sunday this week');
+		
+		$from = $week_start->format('Y-m-d 00:00:00');
+		$to = $week_end->format('Y-m-d 23:59:59');
+			
+		$query = $domain_da->execute(
+				'SELECT spenttime
+			FROM innowork_timesheet
+			WHERE userid='.$userId.'
+			AND activitydate >= '.$domain_da->formatText($from).'
+			AND activitydate <= '.$domain_da->formatText($to)
+		);
+	
+		$sum = 0;
+	
+		while (!$query->eof) {
+			$sum = self::sumTime($sum, $query->getFields('spenttime'));
+			$query->moveNext();
+		}
+	
+		return $sum;
+	}
+	
 	/**
 	 * Sums two timesheet time entries.
 	 * 
@@ -164,8 +218,7 @@ class Timesheet
 	public static function sumTime($time1, $time2) {
 		$times = array($time1, $time2);
 		$seconds = 0;
-		foreach ($times as $time)
-		{
+		foreach ($times as $time) {
 			list($hour,$minute,$second) = explode(self::TIME_SEPARATOR, $time.'.00');
 			$seconds += $hour*3600;
 			$seconds += $minute*60;
