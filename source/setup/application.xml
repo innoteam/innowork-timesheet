@@ -5,7 +5,7 @@
 		<idname>innowork-timesheet</idname>
 		<release>
 			<version>1.0</version>
-			<date>2014/06/06</date>
+			<date>2014/01/06</date>
 			<changesfile>CHANGES</changesfile>
 		</release>
 		<description>Innowork Timesheet</description>
@@ -42,15 +42,28 @@
 
         <class name="innowork/timesheet/Timesheet.php" />
 
-		<domaingroup name="projects"
+		<domaingroup name="timesheet"
 			catalog="innowork-timesheet::timesheet_misc" />
-		
+
+		<domainpanel name="timesheet" category="timesheet" catalog="innowork-timesheet::timesheet_misc" />
+
         <catalog name="innowork-timesheet" />
 
         <domaintable name="innowork_timesheet"
             file="innowork_timesheet.xml" />
 
 		<class name="innowork/timesheet/InnoworkTimesheet.php" />
+
+        <dashboardwidget
+            name="innoworkmytimesheet"
+            panel="timesheet"
+            file="InnoworkMyTimesheetDashboardWidget.php"
+            catalog="innowork-timesheet::timesheet_dashboard"
+            title="mytimesheet"
+            class="\\Shared\\Dashboard\\InnoworkMyTimesheetDashboardWidget" />
+
+        <wuiwidget name="innoworktimesheetcalendar"
+            file="WuiInnoworktimesheetcalendar.php" />
 
 	</components>
 </application>
