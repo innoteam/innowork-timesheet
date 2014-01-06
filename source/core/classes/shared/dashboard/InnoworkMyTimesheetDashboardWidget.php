@@ -4,6 +4,7 @@ namespace Shared\Dashboard;
 
 use \Innomatic\Core\InnomaticContainer;
 use \Shared\Wui;
+use \Innomatic\Wui\Dispatch;
 
 class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\DashboardWidget
 {
@@ -41,6 +42,57 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
         		 <label>'.WuiXml::cdata(sprintf($locale_catalog->getStr('logged_week.label'), $week_sum)).'</label>
         	   </args>
         	 </label>
+        		 		
+  <horizbar/>
+
+  <horizgroup><args><width>0%</width></args><children>
+
+  <button>
+    <args>
+      <horiz>true</horiz>
+      <frame>false</frame>
+      <themeimage>clock1</themeimage>
+      <label>'.$locale_catalog->getStr('timesheet.button').'</label>
+      <action>'.WuiXml::cdata(
+    	      		\Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString(
+    	      				'timesheet',
+    	      				array(
+    	      						array(
+    	      								'view',
+    	      								'default',
+    	      								array(
+    	      								)
+    	      						)
+    	      				)
+    	      		)
+    	      ).'</action>
+    </args>
+  </button>
+    	      		
+  <button>
+    <args>
+      <horiz>true</horiz>
+      <frame>false</frame>
+      <themeimage>mathadd</themeimage>
+      <label>'.$locale_catalog->getStr('log_work.button').'</label>
+      <action>'.WuiXml::cdata(
+    	      		\Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString(
+    	      				'timesheet',
+    	      				array(
+    	      						array(
+    	      								'view',
+    	      								'logwork',
+    	      								array(
+    	      								)
+    	      						)
+    	      				)
+    	      		)
+    	      ).'</action>
+    </args>
+  </button>
+    	      		
+  </children></horizgroup>
+    	      			
            </children>
          </vertgroup>';
 
@@ -54,6 +106,6 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
 
     public function getHeight()
     {
-        return 60;
+        return 90;
     }
 }
