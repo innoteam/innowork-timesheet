@@ -203,7 +203,7 @@ function innoworktscalendarlinkopened()
         $this->mLayout .=
 '<table border="0" cellspacing="2" cellpadding="1" width="'.$total_width.'">
 <tr><td width="'.$total_width.'" bgcolor="'.$this->mThemeHandler->mColorsSet['tables']['gridcolor'].'">
-<table border="0" width="'.$total_width.'" cellspacing="1" cellpadding="3" bgcolor="'.$this->mThemeHandler->mColorsSet['tables']['bgcolor'].'">
+<table border="0" width="'.$total_width.'" cellspacing="1" cellpadding="5" bgcolor="'.$this->mThemeHandler->mColorsSet['tables']['bgcolor'].'">
 <tr>
 <td colspan="7" width="'.$total_width.'" bgcolor="'.$this->mThemeHandler->mColorsSet['tables']['headerbgcolor'].'" class="bold" align="center">'.$locale->getStr('month_'.$this->mMonth.'.label').' '.$this->mYear.'</td>
 </tr>
