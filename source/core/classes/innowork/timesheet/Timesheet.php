@@ -57,6 +57,12 @@ class Timesheet
 		$timestamp = InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess()->getTimestampFromDateArray( $activityDate );
 		$domainDa = InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess();
 	
+		// Reformat spent time string
+		$spentTime = str_replace(array(':', ','), '.', $spentTime);
+		if (strpos($spentTime, '.') === false) {
+			$spentTime = '0.'.$spentTime;
+		}
+		
 		$result = $domainDa->execute(
 				'INSERT INTO innowork_timesheet VALUES('.
 				$domainDa->getNextSequenceValue('innowork_timesheet_id_seq').','.
@@ -207,6 +213,63 @@ class Timesheet
 		}
 	
 		return $sum;
+	}
+	
+	public function getLoggedUserTimesheetMonthTotal($userId, $date) {
+		$domain_da = InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess();
+		
+		$from = date('Y-m-d 00:00:00', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
+		$to = date('Y-m-t 23:59:59', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
+			
+		$query = $domain_da->execute(
+				'SELECT spenttime
+			FROM innowork_timesheet
+			WHERE userid='.$userId.'
+			AND activitydate >= '.$domain_da->formatText($from).'
+			AND activitydate <= '.$domain_da->formatText($to)
+		);
+		
+		$sum = 0;
+		
+		while (!$query->eof) {
+			$sum = self::sumTime($sum, $query->getFields('spenttime'));
+			$query->moveNext();
+		}
+		
+		return $sum;
+	}
+	
+	public function getLoggedUserTimesheetMonthTotals($userId, $date) {
+		$domain_da = InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess();
+	
+		$from = date('Y-m-d 00:00:00', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
+		$to = date('Y-m-t 23:59:59', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
+			
+		$query = $domain_da->execute(
+				'SELECT spenttime, activitydate
+			FROM innowork_timesheet
+			WHERE userid='.$userId.'
+			AND activitydate >= '.$domain_da->formatText($from).'
+			AND activitydate <= '.$domain_da->formatText($to)
+		);
+	
+		$tsdays = array();
+	
+		while (!$query->eof) {
+			$activity_date = $domain_da->getDateArrayFromTimestamp($query->getFields('activitydate'));
+			
+			if (isset($tsdays[$date['year']][$date['mon']][$activity_date['mday']]['sum'])) {
+				$tsdays[$date['year']][$date['mon']][$activity_date['mday']]['sum'] = self::sumTime(
+					$tsdays[$date['year']][$date['mon']][$activity_date['mday']]['sum'],
+					$query->getFields('spenttime')
+				);
+			} else {
+				$tsdays[$date['year']][$date['mon']][$activity_date['mday']]['sum'] = $query->getFields('spenttime');
+			}
+			$query->moveNext();
+		}
+	
+		return $tsdays;
 	}
 	
 	/**

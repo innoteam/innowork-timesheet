@@ -27,26 +27,29 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     {
     }
     
-    public function actionNewtsrow($eventData)
+    public function executeNewtsrow($eventData)
     {
     	$timesheet = new \Innowork\Timesheet\Timesheet();
     	$locale_country = new \Innomatic\Locale\LocaleCountry(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
     	$date_array = $locale_country->getDateArrayFromShortDatestamp($eventData['date']);
     
+    	// Old style require, waiting for Innowork Project upgrade
+    	require_once('innowork/projects/InnoworkProject.php');
+    	
     	$timesheet->addTimesheetRow(
     			InnoworkProject::ITEM_TYPE,
-    			$eventData['projectid'],
+    			$eventData['projectid_id'],
     			$eventData['user'],
     			$date_array,
     			$eventData['activitydesc'],
     			$eventData['timespent'],
-    			$eventData['cost'],
-    			$eventData['costtype'],
+    			'',
+    			'',
     			''
     	);
     }
     
-    public function actionChangetsrow($eventData)
+    public function executeChangetsrow($eventData)
     {
     	$timesheet = new \Innowork\Timesheet\Timesheet();
     	$locale_country = new \Innomatic\Locale\LocaleCountry(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
@@ -63,19 +66,19 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     	);
     }
     
-    public function actionRemovetsrow($eventData)
+    public function executeRemovetsrow($eventData)
     {
     	$timesheet = new \Innowork\Timesheet\Timesheet();
     	$timesheet->deleteTimesheetRow($eventData['rowid']);
     }
     
-    public function actionConsolidate($eventData)
+    public function executeConsolidate($eventData)
     {    
     	$timesheet = new \Innowork\Timesheet\Timesheet();
     	$timesheet->consolidateTimesheetRow($eventData['rowid']);
     }
 
-    public function actionUnconsolidate($eventData)
+    public function executeUnconsolidate($eventData)
     {
     	$timesheet = new \Innowork\Timesheet\Timesheet();
     	$timesheet->unconsolidateTimesheetRow( $eventData['rowid'] );

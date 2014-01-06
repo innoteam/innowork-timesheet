@@ -59,6 +59,15 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     )
 );
         */
+        $this->toolbars['view'] = array(
+        	'default' => array(
+        		'label' => $this->localeCatalog->getStr('timesheet.button'),
+        		'themeimage' => 'calendar',
+        		'action' => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
+        		'horiz' => 'true'
+        	)
+        );
+        
         $this->toolbars['log'] = array(
 			'default' => array(
 				'label' => $this->localeCatalog->getStr('log_work.button'),
@@ -99,7 +108,39 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     public function viewDefault($eventData)
     {
-    	$this->pageXml = '<vertgroup></vertgroup>';
+    	$country = new \Innomatic\Locale\LocaleCountry(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
+    	$ts_manager = new \Innowork\Timesheet\Timesheet();
+    	
+    	$tsdays = $ts_manager->getLoggedUserTimesheetMonthTotals(
+    		InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId(),
+    		$country->getDateArrayFromUnixTimestamp(time())
+    	);
+    	
+    	$this->pageXml = '<vertgroup><children>
+  <innoworktimesheetcalendar>
+    <name>calendar</name>
+    <args>
+      <timesheet type="array">'.WuiXml::encode($tsdays).'</timesheet>
+      <year>'.( isset($eventData['year'] ) ? $eventData['year'] : '' ).'</year>
+      <month>'.( isset($eventData['month'] ) ? $eventData['month'] : '' ).'</month>
+      <day>'.( isset($eventData['day'] ) ? $eventData['day'] : '' ).'</day>
+      <showdaybuilderfunction>\\TimesheetPanelViews::calendar_show_day_action_builder</showdaybuilderfunction>
+      <showeventbuilderfunction>\\TimesheetPanelViews::calendar_show_event_action_builder</showeventbuilderfunction>
+      <disp>view</disp>
+      <newaction type="encoded">'.urlencode(
+        WuiEventsCall::buildEventsCallString(
+            'timesheet',
+            array(
+                array(
+                    'view',
+                    'logwork'
+                    )
+                )
+            )
+        ).'</newaction>
+    </args>
+  </innoworktimesheetcalendar>
+</children></vertgroup>';
     }
     
     public function viewLogwork($eventData)
@@ -145,10 +186,14 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	
     	$country = new \Innomatic\Locale\LocaleCountry(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
     	
+    	$year = isset($eventData['year']) ? $eventData['year'] : date('Y');
+    	$mon = isset($eventData['mon']) ? $eventData['mon'] : date('m');
+    	$mday = isset($eventData['mday']) ? $eventData['mday'] : date('d');
+    	
     	$start_date_array = array(
-    			'year' => date( 'Y' ),
-    			'mon' => date( 'm' ),
-    			'mday' => date( 'd' ),
+    			'year' => $year,
+    			'mon' => $mon,
+    			'mday' => $mday,
     			'hours' => date( 'H' ),
     			'minutes' => '00',
     			'seconds' => '00'
@@ -254,5 +299,32 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	}
     	echo json_encode($content);
     	InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->halt();
+    }
+    
+    public static function calendar_show_event_action_builder( $id )
+    {
+    	return WuiEventsCall::buildEventsCallString( '', array( array(
+    			'view',
+    			'showevent',
+    			array( 'id' => $id )
+    	) ) );
+    }
+    
+    public static function calendar_show_day_action_builder(
+    		$year,
+    		$month,
+    		$day
+    )
+    {
+    	return WuiEventsCall::buildEventsCallString( '', array( array(
+    			'view',
+    			'default',
+    			array(
+    					'year' => $year,
+    					'month' => $month,
+    					'day' => $day,
+    					'viewby' => 'day'
+    			)
+    	) ) );
     }
 }
