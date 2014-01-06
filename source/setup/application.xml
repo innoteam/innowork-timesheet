@@ -42,8 +42,10 @@
 
         <class name="innowork/timesheet/Timesheet.php" />
 
-		<domaingroup name="projects"
+		<domaingroup name="timesheet"
 			catalog="innowork-timesheet::timesheet_misc" />
+			
+		<domainpanel name="timesheet" category="timesheet" catalog="innowork-timesheet::timesheet_misc" />
 		
         <catalog name="innowork-timesheet" />
 
