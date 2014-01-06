@@ -3,6 +3,12 @@ namespace Innowork\Timesheet;
 
 class Timesheet
 {
+	/**
+	 * Symbol used to separate hours and minutes in a time entry.
+	 * @var string
+	 */
+	const TIME_SEPARATOR = '.';
+	
 	public function getTimesheet($itemType = '', $itemId = '') {
 		$result = array();
 
@@ -147,6 +153,29 @@ class Timesheet
 			'DELETE FROM innowork_timesheet '.
 			'WHERE id='.$rowId
 		);
+	}
+	
+	/**
+	 * Sums two timesheet time entries.
+	 * 
+	 * @param string $time1
+	 * @param string $time2
+	 */
+	public static function sumTime($time1, $time2) {
+		$times = array($time1, $time2);
+		$seconds = 0;
+		foreach ($times as $time)
+		{
+			list($hour,$minute,$second) = explode(self::TIME_SEPARATOR, $time.'.00');
+			$seconds += $hour*3600;
+			$seconds += $minute*60;
+			$seconds += $second;
+		}
+		$hours = floor($seconds/3600);
+		$seconds -= $hours*3600;
+		$minutes  = floor($seconds/60);
+		$seconds -= $minutes*60;
+		return sprintf('%02d'.self::TIME_SEPARATOR.'%02d', $hours, $minutes);
 	}
 	
 	public static function getTimesheetUsers() {
