@@ -11,7 +11,7 @@
 <project name="Innowork Timesheet" default="package">
 
 	<property name="name" value="innowork-timesheet" />
-	<property name="version" value="1.0" />
+	<property name="version" value="1.1.0" />
 
 	<target name="sources">
 		<tar destfile="${basedir}/build/${name}-src-${version}.tgz" compression="gzip">
