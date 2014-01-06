@@ -1,0 +1,56 @@
+<?xml version='1.0'?>
+<application>
+
+	<definition>
+		<idname>innowork-timesheet</idname>
+		<release>
+			<version>1.0</version>
+			<date>2014/06/06</date>
+			<changesfile>CHANGES</changesfile>
+		</release>
+		<description>Innowork Timesheet</description>
+		<category>intranet</category>
+		<iconfile></iconfile>
+		<dependencies>
+			<dependency>innowork-core[3.1]</dependency>
+            <dependency>innowork-groupware</dependency>
+		</dependencies>
+		<options>
+			<!-- <option></option> -->
+		</options>
+		<legal>
+			<author>
+				<name>Innoteam Srl</name>
+				<email>info@innoteam.it</email>
+				<web>http://www.innoteam.it/</web>
+			</author>
+			<copyright>Copyright (c) 2013-2014 Innoteam Srl</copyright>
+			<license>Commercial</license>
+			<licensefile>LICENSE</licensefile>
+		</legal>
+		<support>
+			<supportemail>helpdesk@innoteam.it</supportemail>
+			<bugsemail>helpdesk@innoteam.it</bugsemail>
+			<maintainer>
+				<name>Alex Pagnoni</name>
+				<email>alex.pagnoni@innoteam.it</email>
+			</maintainer>
+		</support>
+	</definition>
+
+	<components>
+
+        <class name="innowork/timesheet/Timesheet.php" />
+
+		<domaingroup name="projects"
+			catalog="innowork-timesheet::timesheet_misc" />
+		
+        <catalog name="innowork-timesheet" />
+
+        <domaintable name="innowork_timesheet"
+            file="innowork_timesheet.xml" />
+
+		<class name="innowork/timesheet/InnoworkTimesheet.php" />
+
+	</components>
+</application>

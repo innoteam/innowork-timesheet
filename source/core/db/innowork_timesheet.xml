@@ -1,0 +1,22 @@
+<?xml version='1.0'?>
+<database>
+
+    <table name="innowork_timesheet">
+        <field	name="id"	type="integer"	notnull="1"/>
+        <field  name="itemtype"   type="text"/>
+        <field	name="itemid"	type="integer"/>
+        <field	name="userid"	type="integer"	notnull="1"/>
+		<field	name="activitydate"	type="timestamp"/>
+		<field	name="description"	type="text"/>
+        <field	name="spenttime" type="decimal" length="6,2"/>
+        <field	name="cost" type="decimal" length="10,2"/>
+		<field	name="costtype"	type="integer"/>
+		<field	name="reportingperiod"	type="text"/>
+		<field name="consolidated" type="boolean"/>
+      
+		<key	field="id"	type="unique"/>
+	</table>
+
+	<sequence	name="innowork_timesheet_id_seq"/>
+
+</database>
