@@ -109,7 +109,10 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     public function viewDefault($eventData)
     {
     	$country = new \Innomatic\Locale\LocaleCountry(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
-    	$ts_manager = new \Innowork\Timesheet\Timesheet();
+    	$ts_manager = new \Innowork\Timesheet\Timesheet(
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+    	);
     	
     	$tsdays = $ts_manager->getLoggedUserTimesheetMonthTotals(
     		InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId(),

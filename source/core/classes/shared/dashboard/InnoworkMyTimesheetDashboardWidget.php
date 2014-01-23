@@ -19,7 +19,10 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
 			InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry()
         );
                 
-        $timesheet = new \Innowork\Timesheet\Timesheet();
+        $timesheet = new \Innowork\Timesheet\Timesheet(
+        	\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+        	\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+        );
         $day_sum = $timesheet->getLoggedUserTimesheetDayTotal(
         	InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId(),
         	$locale_country->getDateArrayFromUnixTimestamp(time())

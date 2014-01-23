@@ -12,7 +12,7 @@
 		<category>intranet</category>
 		<iconfile></iconfile>
 		<dependencies>
-			<dependency>innowork-core[3.1]</dependency>
+			<dependency>innowork-core[3.3.0]</dependency>
             <dependency>innowork-groupware</dependency>
 		</dependencies>
 		<options>
@@ -52,8 +52,12 @@
         <domaintable name="innowork_timesheet"
             file="innowork_timesheet.xml" />
 
-		<class name="innowork/timesheet/InnoworkTimesheet.php" />
-
+        <innoworkitemtype name="timesheetrow" file="timesheetrow"
+            catalog="innowork-timesheet::timesheet_misc"
+            classfile="innowork/timesheet/Timesheet.php" classname="Timesheet" icon="kword"
+            icontype="apps" domainpanel="timesheet"
+            miniicon="folder_txt" summaryname="timesheet-name" showmode="app" />
+            
         <dashboardwidget
             name="innoworkmytimesheet"
             panel="timesheet"

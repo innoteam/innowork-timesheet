@@ -1,13 +1,30 @@
 <?php
 namespace Innowork\Timesheet;
 
-class Timesheet
+require_once('innowork/core/InnoworkItem.php');
+
+class Timesheet extends InnoworkItem
 {
+	const ITEM_TYPE = 'timesheetrow';
+	
 	/**
 	 * Symbol used to separate hours and minutes in a time entry.
 	 * @var string
 	 */
 	const TIME_SEPARATOR = '.';
+	
+	public function __construct(
+			$rrootDb,
+			$rdomainDA,
+			$rowId = 0
+	) {
+		parent::__construct(
+				$rrootDb,
+				$rdomainDA,
+				self::ITEM_TYPE,
+				$rowId
+		);
+	}
 	
 	public function getTimesheet($itemType = '', $itemId = '') {
 		$result = array();
@@ -309,5 +326,16 @@ class Timesheet
 			2 => 'Non imponibile ex art. 7',
 			3 => 'Non imponibile ex art. 15'
 		);
+	}
+	
+	public function getExternalItemWidgetXmlData($item)
+	{
+		if (!$item->hasTag('task')) {
+			return '';
+		}
+		
+		return '<vertgroup><children>
+  <label><args><label>Timesheet</label></args></label>
+</children></vertgroup>';
 	}
 }

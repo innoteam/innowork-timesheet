@@ -29,7 +29,10 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     
     public function executeNewtsrow($eventData)
     {
-    	$timesheet = new \Innowork\Timesheet\Timesheet();
+    	$timesheet = new \Innowork\Timesheet\Timesheet(
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+    	);
     	$locale_country = new \Innomatic\Locale\LocaleCountry(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
     	$date_array = $locale_country->getDateArrayFromShortDatestamp($eventData['date']);
     
@@ -51,7 +54,10 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     
     public function executeChangetsrow($eventData)
     {
-    	$timesheet = new \Innowork\Timesheet\Timesheet();
+    	$timesheet = new \Innowork\Timesheet\Timesheet(
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+    	);
     	$locale_country = new \Innomatic\Locale\LocaleCountry(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
     	$date_array = $locale_country->getDateArrayFromShortDatestamp($eventData['date']);
     
@@ -68,19 +74,28 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     
     public function executeRemovetsrow($eventData)
     {
-    	$timesheet = new \Innowork\Timesheet\Timesheet();
+    	$timesheet = new \Innowork\Timesheet\Timesheet(
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+    	);
     	$timesheet->deleteTimesheetRow($eventData['rowid']);
     }
     
     public function executeConsolidate($eventData)
     {    
-    	$timesheet = new \Innowork\Timesheet\Timesheet();
+    	$timesheet = new \Innowork\Timesheet\Timesheet(
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+    	);
     	$timesheet->consolidateTimesheetRow($eventData['rowid']);
     }
 
     public function executeUnconsolidate($eventData)
     {
-    	$timesheet = new \Innowork\Timesheet\Timesheet();
+    	$timesheet = new \Innowork\Timesheet\Timesheet(
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+    	);
     	$timesheet->unconsolidateTimesheetRow( $eventData['rowid'] );
     }
 }
