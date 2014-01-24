@@ -33,9 +33,22 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
 
     protected function fillDefinition()
     {
+        $this->mDefinition = $this->getWidgetXml(
+            $this->mItemType,
+            $this->mItemId,
+            $this->mTaskType,
+            $this->mTaskId,
+            $this->mUserId
+        );
+
+        return true;
+    }
+   
+    public function getWidgetXml($itemType, $itemId, $taskType, $taskId, $userId)
+    {
         $localeCatalog = new LocaleCatalog(
-             'innowork-timesheet::timesheet_main',
-             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
+            'innowork-timesheet::timesheet_main',
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
         
         $year = isset($eventData['year']) ? $eventData['year'] : date('Y');
@@ -50,8 +63,8 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
             'minutes' => '00',
             'seconds' => '00'
         );
-                
-        $this->mDefinition .= '<vertgroup><children>    <grid><children>
+        
+        $xml = '<vertgroup><children>    <grid><children>
             <label row="0" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('activitydate.label')).'</label></args></label>
     <date row="0" col="1"><name>date</name>
               <args>
@@ -78,7 +91,7 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
         </args>
     </text>
     </children></grid>
-            
+        
   <button>
     <args>
       <horiz>true</horiz>
@@ -90,15 +103,15 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
       <action>javascript:void(0)</action>
     </args>
     			  <events>
-    			    <click>xajax_WuiInnoworktimesheetrapidloggerAddTimesheetRow(\''.$this->mItemType.'\',\''.$this->mItemId.'\',\''.$this->mTaskType.'\',\''.$this->mTaskId.'\',\''.$this->mUserId.'\',document.getElementById(\'timesheet_add_date\').value,document.getElementById(\'timesheet_add_activitydesc\').value,document.getElementById(\'timesheet_add_timespent\').value)</click>
+    			    <click>xajax_WuiInnoworktimesheetrapidloggerAddTimesheetRow(\''.$itemType.'\',\''.$itemId.'\',\''.$taskType.'\',\''.$taskId.'\',\''.$userId.'\',document.getElementById(\'timesheet_add_date\').value,document.getElementById(\'timesheet_add_activitydesc\').value,document.getElementById(\'timesheet_add_timespent\').value)</click>
     			  </events>
   </button>
               </children></vertgroup>';
-
-        return true;
+        
+        return $xml;
     }
-   
-    public function ajaxAddTimesheetRow($itemType, $itemId, $taskType, $taskId, $userId, $date, $activityDesc, $timeSpent)
+    
+    public static function ajaxAddTimesheetRow($itemType, $itemId, $taskType, $taskId, $userId, $date, $activityDesc, $timeSpent)
     {
 		$timesheet = new \Innowork\Timesheet\Timesheet(
 		    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
@@ -122,9 +135,55 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
         );
         
         $objResponse = new XajaxResponse();
-        $objResponse->addAlert("OK");
+        $xml = self::getTimesheetBoxContent($itemType, $itemId, $taskType, $taskId);
+        $html = WuiXml::getContentFromXml('', $xml);
+        
+        $objResponse->addAssign("timesheettaskdata", "innerHTML", $html);
         
         return $objResponse;
+    }
+    
+    public static function getTimesheetBoxContent($itemType, $itemId, $taskType, $taskId)
+    {
+        $summary = \Innowork\Core\InnoworkCore::instance(
+            '\Innowork\Core\InnoworkCore',
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+        )->getSummaries();
+
+        if (!isset($summary[$taskType])) {
+            return false;
+        }
+        
+        $class_name = $summary[$taskType]['classname'];
+        if (!class_exists($class_name)) {
+            return false;
+        }
+        
+        $item = new $class_name(
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess(),
+            $taskId
+        );
+        
+        if (!is_object($item)) {
+            return false;
+        }
+
+        $timesheet = new \Innowork\Timesheet\Timesheet(
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+        );
+        
+        // Get the xml content
+        $xml = $timesheet->getExternalItemWidgetXmlDataContent(
+        	$itemType,
+            $itemId,
+            $taskType,
+            $taskId
+        );
+
+        return $xml;
     }
 }
 

@@ -35,18 +35,32 @@ class Timesheet extends InnoworkItem
 	    }
 	
 	    $item_data = $item->getItem(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId());
+		
+	    $xml = '<divframe><name>timesheettaskdata</name><args><id>timesheettaskdata</id></args><children>';
+	    $xml .= $this->getExternalItemWidgetXmlDataContent(
+	        'project',
+	        $item_data['projectid'],
+	        $item->getItemType(),
+	        $item->getItemId()
+	    );
+	    $xml .= '</children></divframe>';
 	
+	    return $xml;
+	}
+	
+	public function getExternalItemWidgetXmlDataContent($itemType, $itemId, $taskType, $taskId)
+	{
 	    $localeCatalog = new LocaleCatalog(
 	        'innowork-timesheet::timesheet_main',
 	        \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
 	    );
-	
+	    
 	    // Get task timesheet totals by user
 	    $users_ts = $this->getLoggedTaskTimesheetTotals(
-	        $item->getItemType(),
-	        $item->getItemId()
+	        $taskType,
+	        $taskId
 	    );
-	
+
 	    $xml = '<vertgroup><children>
   <horizgroup>
     <args>
@@ -70,34 +84,34 @@ class Timesheet extends InnoworkItem
           </label>
     </children>
   </horizgroup>';
-	
+	    
 	    // Show task timesheet totals by user, if there is logged time
 	    if (count($users_ts['users'])) {
 	        $xml .= '<horizbar/><grid><children>';
-	
+	    
 	        $ts_row = 0;
 	        foreach ($users_ts['users'] as $user_ts) {
 	            $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($user_ts['name']).'</label></args></label>
 		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($user_ts['spenttime']).'</label></args></label>';
 	        }
-	
+	    
 	        $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><bold>true</bold><label>'.WuiXml::cdata($localeCatalog->getStr('task_total_logged.label')).'</label></args></label>
 		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($users_ts['totals']['logged']).'</label></args></label>
 		        </children></grid><horizbar/>';
 	    }
-	
+	    
 	    $xml .= '<innoworktimesheetrapidlogger>
           		  <args>
           		    <userid></userid>
-          		    <itemtype>project</itemtype>
-          		    <itemid>'.$item_data['projectid'].'</itemid>
-          		    <tasktype>'.$item->getItemType().'</tasktype>
-          		    <taskid>'.$item->getItemId().'</taskid>
+          		    <itemtype>'.$itemType.'</itemtype>
+          		    <itemid>'.$itemId.'</itemid>
+          		    <tasktype>'.$taskType.'</tasktype>
+          		    <taskid>'.$taskId.'</taskid>
           		  </args>
           		</innoworktimesheetrapidlogger>
-	
+	    
           		</children></vertgroup>';
-	
+	    
 	    return $xml;
 	}
 	
