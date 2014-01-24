@@ -458,10 +458,10 @@ class Timesheet extends InnoworkItem
 	
 	public static function getTimesheetUsers()
 	{
-		return $this->mrDomainDA->Execute(
+		return InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess()->execute(
 			'SELECT domain_users.id AS id,fname,lname,username '.
 			'FROM domain_users '.
-			'WHERE username<>'.$this->mrDomainDA->formatText(User::getAdminUsername(InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDomainId())).' '.
+			'WHERE username<>'.InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess()->formatText(User::getAdminUsername(InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDomainId())).' '.
 			'ORDER BY lname,fname');
 	}
 	
