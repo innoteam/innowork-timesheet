@@ -43,16 +43,16 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
         $mday = isset($eventData['mday']) ? $eventData['mday'] : date('d');
          
         $start_date_array = array(
-        		'year' => $year,
-        		'mon' => $mon,
-        		'mday' => $mday,
-        		'hours' => date( 'H' ),
-        		'minutes' => '00',
-        		'seconds' => '00'
+            'year' => $year,
+            'mon' => $mon,
+            'mday' => $mday,
+            'hours' => date( 'H' ),
+            'minutes' => '00',
+            'seconds' => '00'
         );
-        
+                
         $this->mDefinition .= '<vertgroup><children>    <grid><children>
-    <label row="0" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('activitydate.label')).'</label></args></label>
+            <label row="0" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('activitydate.label')).'</label></args></label>
     <date row="0" col="1"><name>date</name>
               <args>
              <id>timesheet_add_date</id>
@@ -101,11 +101,11 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
     public function ajaxAddTimesheetRow($itemType, $itemId, $taskType, $taskId, $userId, $date, $activityDesc, $timeSpent)
     {
 		$timesheet = new \Innowork\Timesheet\Timesheet(
-			\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
-			\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+		    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+		    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
 		);
-    	$locale_country = new \Innomatic\Locale\LocaleCountry(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
-    	$date_array = $locale_country->getDateArrayFromShortDatestamp($date);
+		$locale_country = new \Innomatic\Locale\LocaleCountry(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
+		$date_array = $locale_country->getDateArrayFromShortDatestamp($date);
     	
         $timesheet->addTimesheetRow(
             $itemType,
@@ -125,7 +125,6 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
         $objResponse->addAlert("OK");
         
         return $objResponse;
-        
     }
 }
 
