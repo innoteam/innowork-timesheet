@@ -26,42 +26,82 @@ class Timesheet extends InnoworkItem
 		);
 	}
 	
-	public function getTimesheet($itemType = '', $itemId = '', $taskType = '', $taskId = '')
-	{
-		$result = array();
-
-		$timesheet_query = $this->mrDomainDA->execute(
-			'SELECT * '.
-			'FROM innowork_timesheet '.
-			((strlen($itemType) and (int)$itemId > 0 ) ?
-			'WHERE itemtype='.$this->mrDomainDA->formatText($itemType).' AND itemid='.$itemId.' ' : '').
-			((strlen($taskType) and (int)$taskId > 0 ) ?
-			'AND tasktype='.$this->mrDomainDA->formatText($taskType).' AND taskid='.$itemId.' ' : '').
-			'ORDER BY activitydate DESC'
-		);
-			 
-		while (!$timesheet_query->eof) {
-			$result[] = array(
-				'id' => $timesheet_query->getFields('id'),
-				'userid' => $timesheet_query->getFields('userid'),
-				'description' => $timesheet_query->getFields('description'),
-				'activitydate' => $this->mrDomainDA->getDateArrayFromTimestamp(
-					$timesheet_query->getFields('activitydate')
-				),
-				'spenttime' => $timesheet_query->getFields('spenttime'),
-				'cost' => $timesheet_query->getFields('cost'),
-				'costtype' => $timesheet_query->getFields('costtype'),
-				'reportingperiod' => $timesheet_query->getFields('reportingperiod'),
-				'consolidated' => $timesheet_query->getFields('consolidated'),
-				'tasktype' => $timesheet_query->getFields('tasktype'),
-				'taskid' => $timesheet_query->getFields('taskid')
-			);
-
-			$timesheet_query->moveNext();
-		}
+	// Innowork related methods
 	
-		return $result;
+	public function getExternalItemWidgetXmlData($item)
+	{
+	    if (!$item->hasTypeTag('task')) {
+	        return '';
+	    }
+	
+	    $item_data = $item->getItem(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId());
+	
+	    $localeCatalog = new LocaleCatalog(
+	        'innowork-timesheet::timesheet_main',
+	        \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
+	    );
+	
+	    // Get task timesheet totals by user
+	    $users_ts = $this->getLoggedTaskTimesheetTotals(
+	        $item->getItemType(),
+	        $item->getItemId()
+	    );
+	
+	    $xml = '<vertgroup><children>
+  <horizgroup>
+    <args>
+      <align>middle</align>
+      <width>0%</width>
+    </args>
+    <children>
+      <button>
+        <args>
+          <themeimage>clock1</themeimage>
+          <themeimagetype>mini</themeimagetype>
+          <compact>true</compact>
+        </args>
+      </button>
+          <label><name>convert</name>
+        <args>
+          <bold>true</bold>
+          <label>'.WuiXml::cdata($localeCatalog->getStr('timesheet_acl_title.label')).'</label>
+          <compact>true</compact>
+        </args>
+          </label>
+    </children>
+  </horizgroup>';
+	
+	    // Show task timesheet totals by user, if there is logged time
+	    if (count($users_ts['users'])) {
+	        $xml .= '<horizbar/><grid><children>';
+	
+	        $ts_row = 0;
+	        foreach ($users_ts['users'] as $user_ts) {
+	            $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($user_ts['name']).'</label></args></label>
+		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($user_ts['spenttime']).'</label></args></label>';
+	        }
+	
+	        $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><bold>true</bold><label>'.WuiXml::cdata($localeCatalog->getStr('task_total_logged.label')).'</label></args></label>
+		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($users_ts['totals']['logged']).'</label></args></label>
+		        </children></grid><horizbar/>';
+	    }
+	
+	    $xml .= '<innoworktimesheetrapidlogger>
+          		  <args>
+          		    <userid></userid>
+          		    <itemtype>project</itemtype>
+          		    <itemid>'.$item_data['projectid'].'</itemid>
+          		    <tasktype>'.$item->getItemType().'</tasktype>
+          		    <taskid>'.$item->getItemId().'</taskid>
+          		  </args>
+          		</innoworktimesheetrapidlogger>
+	
+          		</children></vertgroup>';
+	
+	    return $xml;
 	}
+	
+	// Timesheet methods
 	
 	public function addTimesheetRow(
 		$itemType,
@@ -140,6 +180,20 @@ class Timesheet extends InnoworkItem
 		return $result;
 	}
 	
+	public function deleteTimesheetRow($rowId)
+	{
+		$rowId = (int)$rowId;
+	
+		if (!$rowId) {
+			return false;
+		}
+		
+		return $this->mrDomainDA->execute(
+			'DELETE FROM innowork_timesheet '.
+			'WHERE id='.$rowId
+		);
+	}
+	
 	public function consolidateTimesheetRow($rowId)
 	{
 		$result = false;
@@ -171,19 +225,46 @@ class Timesheet extends InnoworkItem
 		);
 	}
 	
-	public function deleteTimesheetRow($rowId)
-	{
-		$rowId = (int)$rowId;
+	// Generic timesheet extractions
 	
-		if (!$rowId) {
-			return false;
-		}
-		
-		return $this->mrDomainDA->execute(
-			'DELETE FROM innowork_timesheet '.
-			'WHERE id='.$rowId
-		);
+	public function getTimesheet($itemType = '', $itemId = '', $taskType = '', $taskId = '')
+	{
+	    $result = array();
+	
+	    $timesheet_query = $this->mrDomainDA->execute(
+	        'SELECT * '.
+	        'FROM innowork_timesheet '.
+	        ((strlen($itemType) and (int)$itemId > 0 ) ?
+	            'WHERE itemtype='.$this->mrDomainDA->formatText($itemType).' AND itemid='.$itemId.' ' : '').
+	        ((strlen($taskType) and (int)$taskId > 0 ) ?
+	            'AND tasktype='.$this->mrDomainDA->formatText($taskType).' AND taskid='.$itemId.' ' : '').
+	        'ORDER BY activitydate DESC'
+	    );
+	
+	    while (!$timesheet_query->eof) {
+	        $result[] = array(
+	            'id' => $timesheet_query->getFields('id'),
+	            'userid' => $timesheet_query->getFields('userid'),
+	            'description' => $timesheet_query->getFields('description'),
+	            'activitydate' => $this->mrDomainDA->getDateArrayFromTimestamp(
+	                $timesheet_query->getFields('activitydate')
+	            ),
+	            'spenttime' => $timesheet_query->getFields('spenttime'),
+	            'cost' => $timesheet_query->getFields('cost'),
+	            'costtype' => $timesheet_query->getFields('costtype'),
+	            'reportingperiod' => $timesheet_query->getFields('reportingperiod'),
+	            'consolidated' => $timesheet_query->getFields('consolidated'),
+	            'tasktype' => $timesheet_query->getFields('tasktype'),
+	            'taskid' => $timesheet_query->getFields('taskid')
+	        );
+	
+	        $timesheet_query->moveNext();
+	    }
+	
+	    return $result;
 	}
+	
+	// User related timesheet extractions
 	
 	public function getLoggedUserTimesheetDayTotal($userId, $day)
 	{
@@ -290,6 +371,8 @@ class Timesheet extends InnoworkItem
 		return $tsdays;
 	}
 	
+	// Task related timesheet extractions
+	
 	/**
 	 * Returns the total time logged in a task, grouped by timesheet users.
 	 * 
@@ -334,6 +417,8 @@ class Timesheet extends InnoworkItem
 		return $users;
 	}
 	
+	// Utility methods
+	
 	/**
 	 * Sums two timesheet time entries.
 	 * 
@@ -375,79 +460,6 @@ class Timesheet extends InnoworkItem
 			2 => 'Non imponibile ex art. 7',
 			3 => 'Non imponibile ex art. 15'
 		);
-	}
-	
-	public function getExternalItemWidgetXmlData($item)
-	{
-		if (!$item->hasTypeTag('task')) {
-			return '';
-		}
-		
-		$item_data = $item->getItem(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId());
-		
-		$localeCatalog = new LocaleCatalog(
-			'innowork-timesheet::timesheet_main',
-			\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
-		);
-		
-		// Get task timesheet totals by user
-		$users_ts = $this->getLoggedTaskTimesheetTotals(
-		    $item->getItemType(),
-		    $item->getItemId()
-		);
-		
-		$xml = '<vertgroup><children>
-  <horizgroup>
-    <args>
-      <align>middle</align>
-      <width>0%</width>
-    </args>
-    <children>
-      <button>
-        <args>
-          <themeimage>clock1</themeimage>
-          <themeimagetype>mini</themeimagetype>
-          <compact>true</compact>
-        </args>
-      </button>
-          <label><name>convert</name>
-        <args>
-          <bold>true</bold>
-          <label>'.WuiXml::cdata($localeCatalog->getStr('timesheet_acl_title.label')).'</label>
-          <compact>true</compact>
-        </args>
-          </label>
-    </children>
-  </horizgroup>';
-
-		// Show task timesheet totals by user, if there is logged time
-		if (count($users_ts['users'])) {
-		    $xml .= '<horizbar/><grid><children>';
-		
-		    $ts_row = 0;
-		    foreach ($users_ts['users'] as $user_ts) {
-		        $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($user_ts['name']).'</label></args></label>
-		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($user_ts['spenttime']).'</label></args></label>';
-		    }
-		
-		    $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><bold>true</bold><label>'.WuiXml::cdata($localeCatalog->getStr('task_total_logged.label')).'</label></args></label>
-		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($users_ts['totals']['logged']).'</label></args></label>
-		        </children></grid><horizbar/>';
-		}
-		
-		$xml .= '<innoworktimesheetrapidlogger>
-          		  <args>
-          		    <userid></userid>
-          		    <itemtype>project</itemtype>
-          		    <itemid>'.$item_data['projectid'].'</itemid>
-          		    <tasktype>'.$item->getItemType().'</tasktype>
-          		    <taskid>'.$item->getItemId().'</taskid>
-          		  </args>
-          		</innoworktimesheetrapidlogger>
-
-          		</children></vertgroup>';
-		
-		return $xml;
 	}
 
 	/**
