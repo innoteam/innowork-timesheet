@@ -68,6 +68,8 @@
 
         <wuiwidget name="innoworktimesheetcalendar"
             file="WuiInnoworktimesheetcalendar.php" />
+        <wuiwidget name="innoworktimesheetrapidlogger"
+            file="WuiInnoworktimesheetrapidlogger.php" />
 
 	</components>
 </application>

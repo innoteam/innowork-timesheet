@@ -26,13 +26,18 @@ class Timesheet extends InnoworkItem
 		);
 	}
 	
-	public function getTimesheet($itemType = '', $itemId = '') {
+	public function getTimesheet($itemType = '', $itemId = '', $taskType = '', $taskId = '') {
 		$result = array();
 
-		$timesheet_query = InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess()->execute(
+		$domain_da = InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess();
+		
+		$timesheet_query = $domain_da->execute(
 			'SELECT * '.
-			'FROM innowork_timesheet '.((strlen($itemType) and (int)$itemId > 0 ) ?
-			'WHERE itemid='.$itemId.' ' : '').
+			'FROM innowork_timesheet '.
+			((strlen($itemType) and (int)$itemId > 0 ) ?
+			'WHERE itemtype='.$domain_da->formatText($itemType).' AND itemid='.$itemId.' ' : '').
+			((strlen($taskType) and (int)$taskId > 0 ) ?
+			'AND tasktype='.$domain_da->formatText($taskType).' AND taskid='.$itemId.' ' : '').
 			'ORDER BY activitydate DESC'
 		);
 			 
@@ -48,7 +53,9 @@ class Timesheet extends InnoworkItem
 				'cost' => $timesheet_query->getFields('cost'),
 				'costtype' => $timesheet_query->getFields('costtype'),
 				'reportingperiod' => $timesheet_query->getFields('reportingperiod'),
-				'consolidated' => $timesheet_query->getFields('consolidated')
+				'consolidated' => $timesheet_query->getFields('consolidated'),
+				'tasktype' => $timesheet_query->getFields('tasktype'),
+				'taskid' => $timesheet_query->getFields('taskid')
 			);
 
 			$timesheet_query->moveNext();
@@ -66,7 +73,9 @@ class Timesheet extends InnoworkItem
 		$spentTime,
 		$cost,
 		$costType,
-		$reportingPeriod
+		$reportingPeriod,
+		$taskType = '',
+		$taskId = '0'
 	) {		 
 		if (!strlen($costType)) $costType = 0;
 		if (!strlen($userId)) $userId = InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getUserId();
@@ -81,19 +90,21 @@ class Timesheet extends InnoworkItem
 		}
 		
 		$result = $domainDa->execute(
-				'INSERT INTO innowork_timesheet VALUES('.
-				$domainDa->getNextSequenceValue('innowork_timesheet_id_seq').','.
-				$domainDa->formatText($itemType).','.
-				$domainDa->formatText($itemId).','.
-				$userId.','.
-				$domainDa->formatText( $timestamp ).','.
-				$domainDa->formatText( $description ).','.
-				$domainDa->formatText( $spentTime ).','.
-				$domainDa->formatText( $cost ).','.
-				$costType.','.
-				$domainDa->formatText( $reportingPeriod ).','.
-				$domainDa->formatText( $domainDa->fmtfalse ).
-				')'
+			'INSERT INTO innowork_timesheet VALUES('.
+			$domainDa->getNextSequenceValue('innowork_timesheet_id_seq').','.
+			$domainDa->formatText($itemType).','.
+			$domainDa->formatText($itemId).','.
+			$userId.','.
+			$domainDa->formatText( $timestamp ).','.
+			$domainDa->formatText( $description ).','.
+			$domainDa->formatText( $spentTime ).','.
+			$domainDa->formatText( $cost ).','.
+			$costType.','.
+			$domainDa->formatText( $reportingPeriod ).','.
+			$domainDa->formatText( $domainDa->fmtfalse ).','.
+			$domainDa->formatText($taskType).','.
+			$domainDa->formatText($taskId).
+			')'
 		);
 	
 		return $result;
@@ -320,6 +331,7 @@ class Timesheet extends InnoworkItem
 	}
 	
 	public static function getElencoCodiciImponibili() {
+		// @todo remove this sort of method when possible
 		return array(
 			0 => '',
 			1 => 'Imponibile',
@@ -330,12 +342,69 @@ class Timesheet extends InnoworkItem
 	
 	public function getExternalItemWidgetXmlData($item)
 	{
-		if (!$item->hasTag('task')) {
+		if (!$item->hasTypeTag('task')) {
 			return '';
 		}
 		
+		$item_data = $item->getItem(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId());
+		
+		$localeCatalog = new LocaleCatalog(
+			'innowork-timesheet::timesheet_main',
+			\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
+		);
+		
 		return '<vertgroup><children>
-  <label><args><label>Timesheet</label></args></label>
-</children></vertgroup>';
+  <horizgroup>
+    <args>
+      <align>middle</align>
+      <width>0%</width>
+    </args>
+    <children>
+      <button>
+        <args>
+          <themeimage>clock1</themeimage>
+          <themeimagetype>mini</themeimagetype>
+          <compact>true</compact>
+        </args>
+      </button>
+          <label><name>convert</name>
+        <args>
+          <bold>true</bold>
+          <label>'.WuiXml::cdata(urlencode($localeCatalog->getStr('timesheet_acl_title.label'))).'</label>
+          <compact>true</compact>
+        </args>
+          </label>
+    </children>
+  </horizgroup>
+
+          		<innoworktimesheetrapidlogger>
+          		  <args>
+          		    <userid></userid>
+          		    <itemtype>project</itemtype>
+          		    <itemid>'.$item_data['projectid'].'</itemid>
+          		    <tasktype>'.$item->getItemType().'</tasktype>
+          		    <taskid>'.$item->getItemId().'</taskid>
+          		  </args>
+          		</innoworktimesheetrapidlogger>
+
+          		</children></vertgroup>';
+	}
+
+	/**
+	 * Returns a list of the items that are eligible for recording timesheet rows.
+	 * 
+	 * @return array
+	 */
+	public static function getSupportedItemTypes()
+	{
+		$core = \Innowork\Core\InnoworkCore::instance(
+			'\Innowork\Core\InnoworkCore',
+			\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+			\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+		);
+		
+		$items = $core->getSummaries('', false, array('task'));
+		
+		return $items;
 	}
 }

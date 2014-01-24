@@ -48,7 +48,9 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     			$eventData['timespent'],
     			'',
     			'',
-    			''
+    			'',
+    			$eventData['tasktype'],
+    			$eventData['taskid']
     	);
     }
     
