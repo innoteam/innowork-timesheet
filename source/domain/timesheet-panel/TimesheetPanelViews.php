@@ -326,7 +326,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     {
     	$domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
     	
-    	$query = $domain_da->execute('SELECT id, name FROM innowork_projects WHERE name LIKE "%'.$_GET['term'].'%"');
+    	$query = $domain_da->execute('SELECT id, name FROM innowork_projects WHERE name LIKE "%'.$_GET['term'].'%" AND done <> '.$domain_da->formatText($domain_da->fmttrue));
     	$k = 0;
     	
     	while (!$query->eof) {
