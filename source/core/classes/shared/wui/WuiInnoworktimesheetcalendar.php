@@ -195,10 +195,14 @@ function innoworktscalendarlinkopened()
         // raplace day 0 for day 7, week starts on monday
         // This referers to day of the week
         $month_start_day = date('w', $firstday_month_ts);
-        if ($month_start_day == 0) $month_start_day = 7;
+        if ($month_start_day == 0) {
+            $month_start_day = 7;
+        }
 
         $month_end_day = date('w', $lastday_month_ts);
-        if ($month_end_day == 0) $month_end_day = 7;
+        if ($month_end_day == 0) {
+            $month_end_day = 7;
+        }
 
         $colspan = 2;
         $width = 300;
@@ -217,9 +221,11 @@ function innoworktscalendarlinkopened()
 '<table border="0" cellspacing="2" cellpadding="1" width="'.$total_width.'">
 <tr><td width="'.$total_width.'" bgcolor="'.$this->mThemeHandler->mColorsSet['tables']['gridcolor'].'">
 <table border="0" width="'.$total_width.'" cellspacing="1" cellpadding="5" bgcolor="'.$this->mThemeHandler->mColorsSet['tables']['bgcolor'].'">
+<!--
 <tr>
 <td colspan="7" width="'.$total_width.'" bgcolor="'.$this->mThemeHandler->mColorsSet['tables']['headerbgcolor'].'" class="bold" align="center">'.$locale->getStr('month_'.$this->mMonth.'.label').' '.$this->mYear.'</td>
 </tr>
+-->
 <tr>
 <td bgcolor="white" align="center" width="'.$width.'">'.$locale->getStr('weekday_1.label').'</td>
 <td bgcolor="white" align="center" width="'.$width.'">'.$locale->getStr('weekday_2.label').'</td>
