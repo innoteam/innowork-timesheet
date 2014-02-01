@@ -19,6 +19,7 @@ class WuiInnoworktimesheetcalendar extends WuiWidget
     var $mParentShift;
     var $mShowEventBuilderFunction;
     var $mShowDayBuilderFunction;
+    var $mSessionEnabled = false;
 
     public function __construct(
         $elemName,
@@ -29,40 +30,58 @@ class WuiInnoworktimesheetcalendar extends WuiWidget
     {
         parent::__construct($elemName, $elemArgs, $elemTheme, $dispEvents);
 
-        $tmp_sess = $this->retrieveSession();
+        if (isset($this->mArgs['sessionenabled']) and $this->mArgs['sessionenabled'] == 'true') {
+            $this->mSessionEnabled = true;
+        }
+        
+        if ($this->mSessionEnabled) {
+            $tmp_sess = $this->retrieveSession();
+        }
 
-        if (isset($this->mArgs['day']) and strlen($this->mArgs['day'])) $this->mDay = $this->mArgs['day'];
-        else if (isset($tmp_sess['day']) and strlen($tmp_sess['day'])) $this->mDay = $tmp_sess['day'];
-        else $this->mDay = date('d');
+        if (isset($this->mArgs['day']) and strlen($this->mArgs['day'])) {
+            $this->mDay = $this->mArgs['day'];
+        } elseif (isset($tmp_sess['day']) and strlen($tmp_sess['day'])) {
+            $this->mDay = $tmp_sess['day'];
+        } else {
+            $this->mDay = date('d');
+        }
 
-        if (isset($this->mArgs['month']) and strlen($this->mArgs['month'])) $this->mMonth = $this->mArgs['month'];
-        else if (isset($tmp_sess['month']) and strlen($tmp_sess['month'])) $this->mMonth = $tmp_sess['month'];
-        else $this->mMonth = date('n');
+        if (isset($this->mArgs['month']) and strlen($this->mArgs['month'])) {
+            $this->mMonth = $this->mArgs['month'];
+        } elseif (isset($tmp_sess['month']) and strlen($tmp_sess['month'])) {
+            $this->mMonth = $tmp_sess['month'];
+        } else {
+            $this->mMonth = date('n');
+        }
 
-        if (isset($this->mArgs['year']) and strlen($this->mArgs['year'])) $this->mYear = $this->mArgs['year'];
-        else if (isset($tmp_sess['year']) and strlen($tmp_sess['year'])) $this->mYear = $tmp_sess['year'];
-        else $this->mYear = date('Y');
+        if (isset($this->mArgs['year']) and strlen($this->mArgs['year'])) {
+            $this->mYear = $this->mArgs['year'];
+        } elseif (isset($tmp_sess['year']) and strlen($tmp_sess['year'])) {
+            $this->mYear = $tmp_sess['year'];
+        } else {
+            $this->mYear = date('Y');
+        }
 
-        if (is_array($this->mArgs['timesheet'])) $this->mTimesheet = &$this->mArgs['timesheet'];
+        if (is_array($this->mArgs['timesheet'])) {
+            $this->mTimesheet = &$this->mArgs['timesheet'];
+        }
+        
         if (
             isset($this->mArgs['showdaybuilderfunction'])
             and strlen($this->mArgs['showdaybuilderfunction'])
-           )
-            $this->mShowDayBuilderFunction = $this->mArgs['showdaybuilderfunction'];
+           ) {
+            $this->mShowDayBuilderFunction = $this->mArgs['showdaybuilderfunction'];            
+        }
 
         if (
             isset($this->mArgs['showeventbuilderfunction'])
             and strlen($this->mArgs['showeventbuilderfunction'])
-           )
+           ) {
             $this->mShowEventBuilderFunction = $this->mArgs['showeventbuilderfunction'];
+        }
 
-        if (
-            isset($this->mArgs['shift'])
-            and strlen($this->mArgs['shift'])
-           )
-        {
-            switch($this->mArgs['shift'])
-            {
+        if (isset($this->mArgs['shift']) and strlen($this->mArgs['shift'])) {
+            switch($this->mArgs['shift']) {
             case 'previous':
                 $this->mShift = $this->mArgs['shift'];
                 break;
@@ -72,13 +91,8 @@ class WuiInnoworktimesheetcalendar extends WuiWidget
                 break;
             }
         }
-        if (
-            isset($this->mArgs['parentshift'])
-            and strlen($this->mArgs['parentshift'])
-           )
-        {
-            switch($this->mArgs['parentshift'])
-            {
+        if (isset($this->mArgs['parentshift']) and strlen($this->mArgs['parentshift'])) {
+            switch($this->mArgs['parentshift']) {
             case 'parentprevious':
                 $this->mParentShift = $this->mArgs['parentshift'];
                 break;
@@ -90,44 +104,44 @@ class WuiInnoworktimesheetcalendar extends WuiWidget
         }
 
 
-            switch ($this->mShift)
+        switch ($this->mShift)
+        {
+        case 'previous':
+            $this->mMonth--;
+            if ($this->mMonth == 0)
             {
-            case 'previous':
-                $this->mMonth--;
-                if ($this->mMonth == 0)
-                {
-                    $this->mMonth = 12;
-                    $this->mYear--;
-                }
-                break;
-            case 'next':
-                $this->mMonth++;
-                if ($this->mMonth == 13)
-                {
-                    $this->mMonth = 1;
-                    $this->mYear++;
-                }
-                break;
-            }
-
-            switch ($this->mParentShift)
-            {
-             case 'parentprevious':
+                $this->mMonth = 12;
                 $this->mYear--;
-                break;
-             case 'parentnext':
-                $this->mYear++;
-                break;
             }
+            break;
+        case 'next':
+            $this->mMonth++;
+            if ($this->mMonth == 13)
+            {
+                $this->mMonth = 1;
+                $this->mYear++;
+            }
+            break;
+        }
 
+        switch ($this->mParentShift)
+        {
+         case 'parentprevious':
+            $this->mYear--;
+            break;
+         case 'parentnext':
+            $this->mYear++;
+            break;
+        }
 
-        $this->storeSession(
-            array(
-                'day' => $this->mDay,
-                'month' => $this->mMonth,
-                'year' => $this->mYear
-               )
-           );
+        if ($this->mSessionEnabled) {
+            $this->storeSession(
+                array(
+                    'day' => $this->mDay,
+                    'month' => $this->mMonth,
+                    'year' => $this->mYear)
+            );
+        }
 
         if (isset($this->mArgs['newaction'])) $this->mNewAction = $this->mArgs['newaction'];
         if (isset($this->mArgs['disp'])) $this->mDisp = $this->mArgs['disp'];

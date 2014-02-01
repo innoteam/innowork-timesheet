@@ -9,6 +9,9 @@ CHANGES:
 - Changed minimum Innomatic version to 6.3.0. (Alex Pagnoni)
 - Added checks to avoid logging hours in archived projects. (Alex Pagnoni)
 
+FIXES:
+- Fixed calendar sticky date in session bug. (Alex Pagnoni)
+
 
 
 1.1.0 - 2014/01/07 
