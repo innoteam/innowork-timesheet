@@ -66,17 +66,11 @@ class WuiInnoworktimesheetcalendar extends WuiWidget
             $this->mTimesheet = &$this->mArgs['timesheet'];
         }
         
-        if (
-            isset($this->mArgs['showdaybuilderfunction'])
-            and strlen($this->mArgs['showdaybuilderfunction'])
-           ) {
+        if (isset($this->mArgs['showdaybuilderfunction']) and strlen($this->mArgs['showdaybuilderfunction'])) {
             $this->mShowDayBuilderFunction = $this->mArgs['showdaybuilderfunction'];            
         }
 
-        if (
-            isset($this->mArgs['showeventbuilderfunction'])
-            and strlen($this->mArgs['showeventbuilderfunction'])
-           ) {
+        if (isset($this->mArgs['showeventbuilderfunction']) and strlen($this->mArgs['showeventbuilderfunction'])) {
             $this->mShowEventBuilderFunction = $this->mArgs['showeventbuilderfunction'];
         }
 
@@ -143,8 +137,13 @@ class WuiInnoworktimesheetcalendar extends WuiWidget
             );
         }
 
-        if (isset($this->mArgs['newaction'])) $this->mNewAction = $this->mArgs['newaction'];
-        if (isset($this->mArgs['disp'])) $this->mDisp = $this->mArgs['disp'];
+        if (isset($this->mArgs['newaction'])) {
+            $this->mNewAction = $this->mArgs['newaction'];
+        }
+        
+        if (isset($this->mArgs['disp'])) {
+            $this->mDisp = $this->mArgs['disp'];
+        }
     }
 
     protected function generateSource()
