@@ -176,7 +176,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
   <innoworktimesheetcalendar>
     <name>calendar</name>
     <args>
-      <timesheet type="array">'.WuiXml::encode($tsdays).'</timesheet>
+      <timesheet type="array">'.WuiXml::encode($tsdays['days']).'</timesheet>
       <year>'.( isset($eventData['year'] ) ? $eventData['year'] : '' ).'</year>
       <month>'.( isset($eventData['month'] ) ? $eventData['month'] : '' ).'</month>
       <day>'.( isset($eventData['day'] ) ? $eventData['day'] : '' ).'</day>

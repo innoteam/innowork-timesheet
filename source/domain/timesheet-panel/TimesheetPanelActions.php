@@ -162,7 +162,7 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
   <innoworktimesheetcalendar>
     <name>calendar</name>
     <args>
-      <timesheet type="array">'.WuiXml::encode($tsdays).'</timesheet>
+      <timesheet type="array">'.WuiXml::encode($tsdays['days']).'</timesheet>
       <year>'.$curr_year.'</year>
       <month>'.$curr_month.'</month>
       <showdaybuilderfunction>\\TimesheetPanelViews::calendar_show_day_action_builder</showdaybuilderfunction>

@@ -366,19 +366,24 @@ class Timesheet extends InnoworkItem
 			AND activitydate <= '.$this->mrDomainDA->formatText($to)
 		);
 	
-		$tsdays = array();
+		$tsdays['days'] = array();
+		$tsdays['total']['logged'] = 0;
 	
 		while (!$query->eof) {
 			$activity_date = $this->mrDomainDA->getDateArrayFromTimestamp($query->getFields('activitydate'));
 			
-			if (isset($tsdays[$date['year']][$date['mon']][$activity_date['mday']]['sum'])) {
-				$tsdays[$date['year']][$date['mon']][$activity_date['mday']]['sum'] = self::sumTime(
-					$tsdays[$date['year']][$date['mon']][$activity_date['mday']]['sum'],
+			if (isset($tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'])) {
+				$tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = self::sumTime(
+					$tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'],
 					$query->getFields('spenttime')
 				);
 			} else {
-				$tsdays[$date['year']][$date['mon']][$activity_date['mday']]['sum'] = $query->getFields('spenttime');
+				$tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = $query->getFields('spenttime');
 			}
+			
+			// Advance month total
+			$tsdays['total']['logged'] = self::sumTime($tsdays['total']['logged'], $query->getFields('spenttime'));
+				
 			$query->moveNext();
 		}
 	
