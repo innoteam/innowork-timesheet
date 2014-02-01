@@ -186,6 +186,11 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
       <newaction type="encoded">'.urlencode(WuiEventsCall::buildEventsCallString('timesheet', array(array('view', 'logwork')))).'</newaction>
     </args>
   </innoworktimesheetcalendar>
+          <horizbar/>
+          <grid><children>
+            <label row="0" col="0"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('month_total_logged.label')).'</label></args></label>
+            <label row="0" col="1"><args><label>'.WuiXml::cdata($tsdays['total']['logged']).'</label></args></label>
+          </children></grid>
             </children></vertgroup>
           </children></divframe>';
     }

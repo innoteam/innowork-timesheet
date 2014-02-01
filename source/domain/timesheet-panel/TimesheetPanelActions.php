@@ -18,7 +18,7 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     public function beginHelper()
     {
         $this->localeCatalog = new \Innomatic\Locale\LocaleCatalog(
-            'innowork-timesheet::timesheet_domain',
+            'innowork-timesheet::timesheet_main',
             InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
     }
@@ -101,13 +101,18 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     	$timesheet->unconsolidateTimesheetRow( $eventData['rowid'] );
     }
     
-    public function ajaxGetTimesheetCalendar($year, $month)
+    public static function ajaxGetTimesheetCalendar($year, $month)
     {
         $country = new \Innomatic\Locale\LocaleCountry(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
         
     	$dateCatalog = new LocaleCatalog(
     	    'innowork-timesheet::timesheet_widgets',
     	    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
+    	);
+    	
+    	$mainCatalog = new \Innomatic\Locale\LocaleCatalog(
+    	    'innowork-timesheet::timesheet_main',
+    	    InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
     	);
     	
         $ts_manager = new \Innowork\Timesheet\Timesheet(
@@ -171,6 +176,11 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
       <newaction type="encoded">'.urlencode(WuiEventsCall::buildEventsCallString('timesheet', array(array('view', 'logwork')))).'</newaction>
     </args>
   </innoworktimesheetcalendar>
+          <horizbar/>
+          <grid><children>
+            <label row="0" col="0"><args><label>'.WuiXml::cdata($mainCatalog->getStr('month_total_logged.label')).'</label></args></label>
+            <label row="0" col="1"><args><label>'.WuiXml::cdata($tsdays['total']['logged']).'</label></args></label>
+          </children></grid>
             </children></vertgroup>';
 
         // Build AJAX response
