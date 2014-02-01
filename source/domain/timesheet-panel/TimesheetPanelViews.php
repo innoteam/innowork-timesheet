@@ -109,6 +109,12 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     public function viewDefault($eventData)
     {
     	$country = new \Innomatic\Locale\LocaleCountry(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
+    	
+    	$dateCatalog = new LocaleCatalog(
+    	    'innowork-timesheet::timesheet_widgets',
+    	    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
+    	);
+    	
     	$ts_manager = new \Innowork\Timesheet\Timesheet(
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
@@ -118,8 +124,55 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     		InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId(),
     		$country->getDateArrayFromUnixTimestamp(time())
     	);
+
+    	// Current period
+    	if (isset($eventData['year'])) {
+    	    $curr_year = $eventData['year'];
+    	} else {
+    	    $curr_year = date('Y');
+    	}
+    	if (isset($eventData['month'])) {
+    	    $curr_month = $eventData['month'];
+    	} else {
+    	    $curr_month = date('n');
+    	}
+    	$current_period_label = $dateCatalog->getStr('month_'.$curr_month.'.label').' '.$curr_year;
+    	 
+    	// Previous period
+    	if ($curr_month == 1) {
+    	    $prev_year = $curr_year - 1;
+    	    $prev_month = 12;
+    	    $prev_period_label = '< '.$dateCatalog->getStr('month_'.$prev_month.'.label').' '.$prev_year;
+    	} else {
+    	    $prev_year = $curr_year;
+    	    $prev_month = $curr_month - 1;
+        	$prev_period_label = '< '.$dateCatalog->getStr('month_'.$prev_month.'.label');
+    	}
     	
-    	$this->pageXml = '<vertgroup><children>
+    	// Next period
+    	if ($curr_month == 12) {
+    	    $next_year = $curr_year + 1;
+    	    $next_month = 1;
+    	    $next_period_label = $dateCatalog->getStr('month_'.$next_month.'.label').' '.$next_year.' >';
+    	} else {
+        	$next_year = $curr_year;
+        	$next_month = $curr_month + 1;
+        	$next_period_label = $dateCatalog->getStr('month_'.$next_month.'.label').' >';
+    	}
+    	
+    	$this->pageXml = '<divframe><args><id>tscalendar</id></args><children>
+    	    <vertgroup><args><width>0%</width></args><children>
+    	    <horizgroup><args><width>0%</width><groupalign>center</groupalign></args><children>
+    	    <link><args><link>javascript:void(0)</link><label>'.WuiXml::cdata($prev_period_label).'</label></args>
+    	        <events>
+    	<click>'.WuiXml::cdata("xajax_GetTimesheetCalendar('".$prev_year."', '".$prev_month."');").'</click>
+  	</events></link>
+    	    <label><args><bold>true</bold><label>'.WuiXml::cdata($current_period_label).'</label></args></label>
+    	    <link><args><link>javascript:void(0)</link><label>'.WuiXml::cdata($next_period_label).'</label></args>
+    	        <events>
+    	<click>'.WuiXml::cdata("xajax_GetTimesheetCalendar('".$next_year."', '".$next_month."');").'</click>
+  	</events></link>
+    	    </children></horizgroup>
   <innoworktimesheetcalendar>
     <name>calendar</name>
     <args>
@@ -130,20 +183,11 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
       <showdaybuilderfunction>\\TimesheetPanelViews::calendar_show_day_action_builder</showdaybuilderfunction>
       <showeventbuilderfunction>\\TimesheetPanelViews::calendar_show_event_action_builder</showeventbuilderfunction>
       <disp>view</disp>
-      <newaction type="encoded">'.urlencode(
-        WuiEventsCall::buildEventsCallString(
-            'timesheet',
-            array(
-                array(
-                    'view',
-                    'logwork'
-                    )
-                )
-            )
-        ).'</newaction>
+      <newaction type="encoded">'.urlencode(WuiEventsCall::buildEventsCallString('timesheet', array(array('view', 'logwork')))).'</newaction>
     </args>
   </innoworktimesheetcalendar>
-</children></vertgroup>';
+            </children></vertgroup>
+          </children></divframe>';
     }
     
     public function viewLogwork($eventData)

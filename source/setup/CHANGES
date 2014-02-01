@@ -3,7 +3,8 @@
 NEW FEATURES:
 - Added timesheet data entry inside tasks details box. (Alex Pagnoni)
 - Added task timesheet totals inside tasks details box. (Alex Pagnoni)
- 
+- Added timesheet period navigation between months. (Alex Pagnoni)
+
 CHANGES:
 - Timesheet class is now an Innowork Item. (Alex Pagnoni)
 - Changed minimum Innomatic version to 6.3.0. (Alex Pagnoni)
