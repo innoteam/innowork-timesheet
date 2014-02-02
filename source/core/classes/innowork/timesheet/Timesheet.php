@@ -278,6 +278,173 @@ class Timesheet extends InnoworkItem
 	    return $result;
 	}
 	
+	public function getTimesheetView(
+	    $detailed = true,
+	    $detailLevel = 'timesheet',
+	    $timeType = 'spent',
+	    $by = 'project',
+	    $period = 'monthly',
+	    $date = array(),
+	    $projectId = '',
+	    $userId = '',
+	    $taskType = '',
+	    $taskId = '')
+	{
+	    $conditions_array = array();
+	    $conditions_list = '';
+	
+	    // Time type (planned/spent)
+	     
+	    switch ($timeType) {
+	    	case 'planned':
+	    	    // Not supported at this time
+	    	    $time_type = 'spenttime';
+	    	    break;
+	
+	    	case 'spent':
+	    	default:
+	    	    $time_type = 'spenttime';
+	    	    break;
+	    }
+	     
+	    // Period
+	     
+	    switch ($period) {
+	    	case 'month':
+	    	    $from = date('Y-m-d 00:00:00', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
+	    	    $to = date('Y-m-t 23:59:59', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
+	
+	    	case 'week':
+	    	    $dateTime = new \DateTime($date['year'].'-'.$date['mon'].'-'.$date['mday']);
+	    	    $week_start = clone $dateTime->modify(('Sunday' == $dateTime->format('l')) ? 'Monday last week' : 'Monday this week');
+	    	    $week_end = clone $dateTime->modify('Sunday this week');
+	
+	    	    $from = $week_start->format('Y-m-d 00:00:00');
+	    	    $to = $week_end->format('Y-m-d 23:59:59');
+	    	    break;
+	
+	    	case 'day':
+	    	    break;
+	
+	    	case 'all':
+	    	default:
+	    	    $from = '';
+	    	    $to = '';
+	    	    break;
+	    }
+	     
+	    if (strlen($from)) {
+	        $conditions_array[] = 'activitydate >= '.$this->mrDomainDA->formatText($from);
+	    }
+	
+	    if (strlen($to)) {
+	        $conditions_array[] = 'activitydate <= '.$this->mrDomainDA->formatText($to);
+	    }
+	     
+	    // Project filter
+	     
+	    if ((int)$projectId > 0) {
+	        $conditions_array[] = 'itemtype='.$this->mrDomainDA->formatText('project');
+	        $conditions_array[] = 'itemid='.$projectId;
+	    }
+	     
+	    // User filter
+	     
+	    if ((int)$userId > 0) {
+	        $conditions_array[] = 'userid='.$userId;
+	    }
+	     
+	    // Task filter
+	     
+	    if (strlen($taskType) and (int)$taskId > 0) {
+	        $conditions_array[] = 'tasktype='.$this->mrDomainDA->formatText($taskType);
+	        $conditions_array[] = 'taskid='.$taskId;
+	    }
+	     
+	    // By project/user/team
+	     
+	    switch ($by) {
+	    	case 'project':
+	    	    // Project / Task / User
+	    	    break;
+	
+	    	case 'task':
+	    	    // Project / Task / User
+	    	    break;
+	
+	    	case 'user':
+	    	    // User / Project / Task
+	    	    break;
+	
+	    	default:
+	    	    break;
+	    }
+	
+	    if (count($conditions_array)) {
+	        $conditions_start = true;
+	         
+	        foreach ($conditions_array as $condition) {
+	            if ($conditions_start) {
+	                $conditions_start = false;
+	                $conditions_list .= ' WHERE ';
+	            } else {
+	                $conditions_list .= ' AND ';
+	            }
+	        }
+	    }
+	     
+	    switch ($detailed) {
+	    	case true:
+	    	    $fields = '*';
+	    	    break;
+	    	     
+	    	case false:
+	    	default:
+	    	    $fields = $time_type;
+	    	    break;
+	    }
+	
+	    $query = $this->mrDomainDA->execute(
+	        'SELECT '.$fields.' '.
+	        'FROM innowork_timesheet'.$conditions_list.' '.
+	        'ORDER BY activitydate'
+	    );
+	     
+	    if ($detailed) {
+	        $tsdays['days'] = array();
+	        $tsdays['total']['logged'] = 0;
+	        	
+	        while (!$query->eof) {
+	            $activity_date = $this->mrDomainDA->getDateArrayFromTimestamp($query->getFields('activitydate'));
+	
+	            if (isset($tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'])) {
+	                $tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = self::sumTime(
+	                    $tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'],
+	                    $query->getFields('spenttime')
+	                );
+	            } else {
+	                $tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = $query->getFields('spenttime');
+	            }
+	
+	            // Advance month total
+	            $tsdays['total']['logged'] = self::sumTime($tsdays['total']['logged'], $query->getFields('spenttime'));
+	            	
+	            $query->moveNext();
+	        }
+	        	
+	        return $tsdays;
+	    } else {
+	        $sum = 0;
+	         
+	        while (!$query->eof) {
+	            $sum = self::sumTime($sum, $query->getFields($time_type));
+	            $query->moveNext();
+	        }
+	         
+	        return $sum;
+	    }
+	}
+	
 	// User related timesheet extractions
 	
 	public function getLoggedUserTimesheetDayTotal($userId, $day)
