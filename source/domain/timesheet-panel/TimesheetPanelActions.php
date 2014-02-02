@@ -181,6 +181,29 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
             <label row="0" col="0"><args><label>'.WuiXml::cdata($mainCatalog->getStr('month_total_logged.label')).'</label></args></label>
             <label row="0" col="1"><args><label>'.WuiXml::cdata($tsdays['total']['logged']).'</label></args></label>
           </children></grid>
+  <button>
+    <args>
+      <horiz>true</horiz>
+      <frame>false</frame>
+      <themeimage>printer</themeimage>
+      <label>'.$mainCatalog->getStr('print_timesheet_report.button').'</label>
+      <action>'.WuiXml::cdata(
+    	      		WuiEventsCall::buildEventsCallString(
+    	      				'',
+    	      				array(
+    	      						array(
+    	      								'view',
+    	      								'printuserreport',
+    	      								array(
+    	      								    'month' => $curr_month,
+    	      								    'year' => $curr_year
+    	      								)
+    	      						)
+    	      				)
+    	      		)
+    	      ).'</action>
+    </args>
+  </button>
             </children></vertgroup>';
 
         // Build AJAX response

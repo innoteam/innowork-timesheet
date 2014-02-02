@@ -278,6 +278,42 @@ class Timesheet extends InnoworkItem
 	    return $result;
 	}
 	
+	public function getUserTimesheet($userId, $fromDate, $toDate)
+	{
+	    $result = array();
+	    
+	    $from = $fromDate['year'].'-'.$fromDate['mon'].'-'.$fromDate['mday'].' 00:00:00';
+	    $to = $toDate['year'].'-'.$toDate['mon'].'-'.$toDate['mday'].' 23:59:59';
+	
+	    $timesheet_query = $this->mrDomainDA->execute(
+	        'SELECT * '.
+	        'FROM innowork_timesheet '.
+	        'WHERE userid='.$userId.' '.
+	        'AND activitydate >= '.$this->mrDomainDA->formatText($from).' '.
+			'AND activitydate <= '.$this->mrDomainDA->formatText($to).' '.
+	        'ORDER BY itemid, tasktype, taskid, activitydate DESC'
+	    );
+	
+	    while (!$timesheet_query->eof) {
+	        $result[] = array(
+	            'id' => $timesheet_query->getFields('id'),
+	            'description' => $timesheet_query->getFields('description'),
+	            'activitydate' => $this->mrDomainDA->getDateArrayFromTimestamp(
+	                $timesheet_query->getFields('activitydate')
+	            ),
+	            'spenttime' => $timesheet_query->getFields('spenttime'),
+	            'itemtype' => $timesheet_query->getFields('itemtype'),
+	            'itemid' => $timesheet_query->getFields('itemid'),
+	            'tasktype' => $timesheet_query->getFields('tasktype'),
+	            'taskid' => $timesheet_query->getFields('taskid')
+	        );
+	
+	        $timesheet_query->moveNext();
+	    }
+	
+	    return $result;
+	}
+	
 	// User related timesheet extractions
 	
 	public function getLoggedUserTimesheetDayTotal($userId, $day)

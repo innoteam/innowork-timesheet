@@ -191,6 +191,29 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             <label row="0" col="0"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('month_total_logged.label')).'</label></args></label>
             <label row="0" col="1"><args><label>'.WuiXml::cdata($tsdays['total']['logged']).'</label></args></label>
           </children></grid>
+  <button>
+    <args>
+      <horiz>true</horiz>
+      <frame>false</frame>
+      <themeimage>printer</themeimage>
+      <label>'.$this->localeCatalog->getStr('print_timesheet_report.button').'</label>
+      <action>'.WuiXml::cdata(
+    	      		WuiEventsCall::buildEventsCallString(
+    	      				'',
+    	      				array(
+    	      						array(
+    	      								'view',
+    	      								'printuserreport',
+    	      								array(
+    	      								    'month' => $curr_month,
+    	      								    'year' => $curr_year
+    	      								)
+    	      						)
+    	      				)
+    	      		)
+    	      ).'</action>
+    </args>
+  </button>
             </children></vertgroup>
           </children></divframe>';
     }
@@ -409,6 +432,138 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	}
     	echo json_encode($content);
     	InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->halt();
+    }
+    
+    public function viewPrintuserreport($eventData)
+    {
+        $domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
+        
+        $innowork_core = \Innowork\Core\InnoworkCore::instance('\Innowork\Core\InnoworkCore', \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(), \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess());
+        $summaries = $innowork_core->getSummaries();
+        
+        $timesheet_manager = new \Innowork\Timesheet\Timesheet(
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+        );
+        $timesheet = $timesheet_manager->getUserTimesheet(
+            InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getUserId(),
+            array('mday' => sprintf('%02d', 1), 'mon' => sprintf('%02d', $eventData['month']), 'year' => $eventData['year']),
+            array('mday' => sprintf('%02d', date('t', mktime(0, 0, 0, $eventData['month'], 1, $eventData['year']))), 'mon' => sprintf('%02d', $eventData['month']), 'year' => $eventData['year'])
+        );
+        
+        // Users list
+        /*
+        $users_query = \Innowork\Timesheet\Timesheet::getTimesheetUsers();
+        
+        $users = array();
+        
+        while ( !$users_query->eof )
+        {
+            $users[$users_query->getFields( 'id' )] = $users_query->getFields( 'lname' ).
+            ' '.$users_query->getFields( 'fname' );
+        
+            $users_query->moveNext();
+        }
+        */
+        
+        $headers[0]['label'] = $this->localeCatalog->getStr( 'project.header' );
+        $headers[1]['label'] = $this->localeCatalog->getStr( 'activity.header' );
+        $headers[2]['label'] = $this->localeCatalog->getStr( 'date.header' );
+        $headers[3]['label'] = $this->localeCatalog->getStr( 'activitydesc.header' );
+        $headers[4]['label'] = $this->localeCatalog->getStr( 'timespent.header' );
+        
+        $row = 1;
+        
+        $country = new LocaleCountry(
+            InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getCountry()
+        );
+        
+        echo "<html><head><title>Timesheet Report</title><meta charset=\"UTF-8\"></head><body onload=\"window.print()\">\n";
+        
+        echo '<table style="width: 100%"><tr><td>User</td><td>Month</td><td>Year</td></tr>
+			<tr><td><strong>'.InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getUserId().'</strong></td><td><strong>'.$eventData['month'].'</strong></td><td><strong>'.$eventData['year'].'</strong></td></tr></table>';
+        
+        echo "<br><table border=\"0\" cellspacing=\"0\" cellpadding=\"4\" style=\"border: solid 0px; width: 100%;\">\n";
+        echo "<tr>\n";
+        echo "<th valign=\"top\">".$headers[0]['label']."</th>\n";
+        echo "<th valign=\"top\">".$headers[1]['label']."</th>\n";
+        echo "<th valign=\"top\">".$headers[2]['label']."</th>\n";
+        echo "<th valign=\"top\">".$headers[3]['label']."</th>\n";
+        echo "<th valign=\"top\">".$headers[4]['label']."</th>\n";
+        echo "</tr>\n";
+        
+        $prev_project = '';
+        $prev_task = '';    
+
+        $sum = 0;
+        
+        foreach ($timesheet as $ts_row) {
+            // Check if this is a different project. If so, print the project header.
+            if ($prev_project != $ts_row['itemtype'].$ts_row['itemid']) {
+                $item_title = '';
+            
+                if (isset($summaries[$ts_row['itemtype']]) and strlen($ts_row['itemid'])) {
+                    $task_query = $domain_da->execute(
+                        'SELECT name '.
+                        'FROM '.$summaries[$ts_row['itemtype']]['table'].' '.
+                        'WHERE id='.$ts_row['itemid']
+                    );
+            
+                    if ($task_query->getNumberRows() > 0) {
+                        $item_title = $task_query->getFields('name');
+                    }
+            
+                    if (strlen($item_title)) {
+                        $item_title = ': '.$item_title;
+                    }
+                }
+            
+                // $summaries[$ts_row['itemtype']]['label']
+                echo '<tr><td colspan="5"><strong>'.$this->localeCatalog->getStr( 'project.header' ).' '.$ts_row['itemid'].$item_title.'</strong></td></tr>';
+            }
+            
+            // Check if this is a different task. If so, print the task header.
+            if ($prev_task != $ts_row['tasktype'].$ts_row['taskid']) {
+                $task_title = '';
+            
+                if (isset($summaries[$ts_row['tasktype']]) and strlen($ts_row['taskid'])) {
+                    $task_query = $domain_da->execute(
+                        'SELECT title '.
+                        'FROM '.$summaries[$ts_row['tasktype']]['table'].' '.
+                        'WHERE id='.$ts_row['taskid']
+                    );
+            
+                    if ($task_query->getNumberRows() > 0) {
+                        $task_title = $task_query->getFields('title');
+                    }
+            
+                    if (strlen($task_title)) {
+                        $task_title = ': '.$task_title;
+                    }
+                }
+            
+                echo '<tr><td></td><td colspan="4"><strong>'.$summaries[$ts_row['tasktype']]['label'].' '.$ts_row['taskid'].$task_title.'</strong></td></tr>';
+            }
+        
+            echo "<tr>\n";
+            echo "<td></td><td></td>\n";
+            echo "<td valign=\"top\">".$country->FormatShortArrayDate( $ts_row['activitydate'] )."</td>\n";
+            echo "<td valign=\"top\">".nl2br( $ts_row['description'] )."</td>\n";
+            echo "<td align=\"right\" valign=\"top\">".$ts_row['spenttime']."</td>\n";
+            echo "</tr>\n";
+            
+            // Keep track of previous task type/id
+            $prev_task = $ts_row['tasktype'].$ts_row['taskid'];
+            $prev_project = $ts_row['itemtype'].$ts_row['itemid'];
+            
+            $sum = \Innowork\Timesheet\Timesheet::sumTime($sum, $ts_row['spenttime']);
+        }
+        echo "</table>\n";
+        
+        echo "<p>".$this->localeCatalog->getStr('month_total_logged.label')." <strong>".$sum."</strong></p>\n";
+        echo "</body></html>\n";
+        
+        InnomaticContainer::instance('innomaticcontainer')->halt();
     }
     
     public static function calendar_show_event_action_builder( $id )
