@@ -191,6 +191,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             <label row="0" col="0"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('month_total_logged.label')).'</label></args></label>
             <label row="0" col="1"><args><label>'.WuiXml::cdata($tsdays['total']['logged']).'</label></args></label>
           </children></grid>
+                <horizgroup><children>
   <button>
     <args>
       <horiz>true</horiz>
@@ -214,6 +215,30 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	      ).'</action>
     </args>
   </button>
+  <button>
+    <args>
+      <horiz>true</horiz>
+      <frame>false</frame>
+      <themeimage>printer</themeimage>
+      <label>'.$this->localeCatalog->getStr('print_team_timesheet_report.button').'</label>
+      <action>'.WuiXml::cdata(
+    	      		WuiEventsCall::buildEventsCallString(
+    	      				'',
+    	      				array(
+    	      						array(
+    	      								'view',
+    	      								'printteamreport',
+    	      								array(
+    	      								    'month' => $curr_month,
+    	      								    'year' => $curr_year
+    	      								)
+    	      						)
+    	      				)
+    	      		)
+    	      ).'</action>
+    </args>
+  </button>
+    	          </children></horizgroup>
             </children></vertgroup>
           </children></divframe>';
     }
@@ -563,6 +588,117 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         echo "<p>".$this->localeCatalog->getStr('month_total_logged.label')." <strong>".$sum."</strong></p>\n";
         echo "</body></html>\n";
         
+        InnomaticContainer::instance('innomaticcontainer')->halt();
+    }
+    
+    public function viewPrintteamreport($eventData)
+    {
+        $domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
+    
+        $innowork_core = \Innowork\Core\InnoworkCore::instance('\Innowork\Core\InnoworkCore', \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(), \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess());
+        $summaries = $innowork_core->getSummaries();
+    
+        $timesheet_manager = new \Innowork\Timesheet\Timesheet(
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+        );
+        $timesheet = $timesheet_manager->getLoggedTeamTimesheetMonthTotals(
+            array('mday' => sprintf('%02d', 1), 'mon' => sprintf('%02d', $eventData['month']), 'year' => $eventData['year'])
+        );
+    
+        // Users list
+        /*
+        $users_query = \Innowork\Timesheet\Timesheet::getTimesheetUsers();
+    
+        $users = array();
+    
+        while ( !$users_query->eof )
+        {
+        $users[$users_query->getFields( 'id' )] = $users_query->getFields( 'lname' ).
+        ' '.$users_query->getFields( 'fname' );
+    
+        $users_query->moveNext();
+        }
+        */
+    
+            $row = 1;
+    
+                $country = new LocaleCountry(
+            InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getCountry()
+        );
+    
+                $month_days = date('t', mktime(0, 0, 0, $eventData['month'], 1, $eventData['year']));
+                $month = sprintf('%02d', $eventData['month']);
+                
+        echo "<html><head><title>Team Timesheet Report</title><meta charset=\"UTF-8\">
+<style type=\"text/css\">
+<!--
+   @media print{
+      @page {size: landscape;}
+    }
+            
+* { font-family: arial, helvetica, sans-serif; font-size: 8pt; }
+-->
+</style>            
+            </head><body onload=\"window.print()\">\n";
+    
+        echo '<table style="width: 100%"><tr><td>Month</td><td>Year</td></tr>
+			<tr><td><strong>'.$eventData['month'].'</strong></td><td><strong>'.$eventData['year'].'</strong></td></tr></table>';
+    
+        echo "<br><table border=\"1\" cellspacing=\"0\" cellpadding=\"4\" style=\"border: solid 1px; width: 100%;\">\n";
+        echo "<tr>\n";
+        echo "<th valign=\"top\">".$this->localeCatalog->getStr('user.header')."</th>\n";
+        
+        for ($i = 1; $i <= $month_days; $i++) {
+            echo "<th valign=\"top\">".$i."</th>\n";
+        }
+        echo "<th valign=\"top\">Totale</th>\n";
+        echo "</tr>\n";
+    
+        $sum = 0;
+        
+        $sum_days = array();
+        
+        // Users list
+        $users_query = \Innowork\Timesheet\Timesheet::getTimesheetUsers();
+        
+        while (!$users_query->eof) {
+            $userid = $users_query->getFields('id');
+            $sum_user = 0;
+            echo "<tr>\n";
+            echo '<td align="right">'.$users_query->getFields('fname').' '.$users_query->getFields('lname')."</td>";
+            for ($i = 1; $i <= $month_days; $i++) {
+                if (isset($timesheet['days'][$userid][$eventData['year']][$month][sprintf('%02d', $i)])) {
+                    echo '<td align="center">'.$timesheet['days'][$userid][$eventData['year']][$month][sprintf('%02d', $i)]['sum'].'</td>';
+                    $sum_days[sprintf('%02d', $i)] = \Innowork\Timesheet\Timesheet::sumTime($sum_days[sprintf('%02d', $i)], $timesheet['days'][$userid][$eventData['year']][$month][sprintf('%02d', $i)]['sum']);
+                    $sum_user = \Innowork\Timesheet\Timesheet::sumTime($sum_user, $timesheet['days'][$userid][$eventData['year']][$month][sprintf('%02d', $i)]['sum']);
+                    $sum = \Innowork\Timesheet\Timesheet::sumTime($sum, $timesheet['days'][$userid][$eventData['year']][$month][sprintf('%02d', $i)]['sum']);
+                } else {
+                    echo '<td align="center">0</td>';
+                }
+            }
+                    echo '<td align="center">'.$sum_user.'</td>';
+            echo "</tr>\n";
+            $users_query->moveNext();
+        }
+        echo "<tr>\n";
+        echo '<td align="right">Totali</td>';
+        for ($i = 1; $i <= $month_days; $i++) {
+            if (isset($sum_days[sprintf('%02d', $i)])) {
+                $sum_day = $sum_days[sprintf('%02d', $i)];
+            } else {
+                $sum_day = 0;
+            }
+            echo '<td align="center">'.$sum_day.'</td>';
+        }
+        echo '<td align="center">'.$sum.'</td>';
+        echo "</tr>\n";
+        
+        echo "</table>\n";
+    
+        echo "<p>".$this->localeCatalog->getStr('month_total_logged.label')." <strong>".$sum."</strong></p>\n";
+        echo "</body></html>\n";
+    
         InnomaticContainer::instance('innomaticcontainer')->halt();
     }
     

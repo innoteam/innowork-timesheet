@@ -426,6 +426,44 @@ class Timesheet extends InnoworkItem
 		return $tsdays;
 	}
 	
+	public function getLoggedTeamTimesheetMonthTotals($date)
+	{
+	    $from = date('Y-m-d 00:00:00', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
+	    $to = date('Y-m-t 23:59:59', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
+	    	
+	    $query = $this->mrDomainDA->execute(
+	        'SELECT ts.userid, ts.spenttime, ts.activitydate
+			FROM innowork_timesheet AS ts
+	        JOIN domain_users AS us ON ts.userid = us.id
+			WHERE
+			activitydate >= '.$this->mrDomainDA->formatText($from).'
+			AND activitydate <= '.$this->mrDomainDA->formatText($to)
+	    );
+	
+	    $tsdays['days'] = array();
+	    $tsdays['total']['logged'] = 0;
+	
+	    while (!$query->eof) {
+	        $activity_date = $this->mrDomainDA->getDateArrayFromTimestamp($query->getFields('activitydate'));
+	        	
+	        if (isset($tsdays['days'][$query->getFields('userid')][$date['year']][$date['mon']][$activity_date['mday']]['sum'])) {
+	            $tsdays['days'][$query->getFields('userid')][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = self::sumTime(
+	                $tsdays['days'][$query->getFields('userid')][$date['year']][$date['mon']][$activity_date['mday']]['sum'],
+	                $query->getFields('spenttime')
+	            );
+	        } else {
+	            $tsdays['days'][$query->getFields('userid')][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = $query->getFields('spenttime');
+	        }
+	        
+	        // Advance month total
+	        $tsdays['total']['logged'] = self::sumTime($tsdays['total']['logged'], $query->getFields('spenttime'));
+
+	        $query->moveNext();
+	    }
+        
+	    return $tsdays;
+	}
+	
 	// Task related timesheet extractions
 	
 	/**
