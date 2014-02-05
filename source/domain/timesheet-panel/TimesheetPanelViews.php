@@ -252,16 +252,6 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
     	);
     	
-    	// Users list
-    	
-    	$users_query = \Innowork\Timesheet\Timesheet::getTimesheetUsers();
-    	$users = array();
-    	
-    	while (!$users_query->eof) {
-    		$users[$users_query->getFields( 'id' )] = $users_query->getFields( 'lname' ).' '.$users_query->getFields( 'fname' );
-    		$users_query->moveNext();
-    	}
-    	
     	$supported_item_types = Timesheet::getSupportedItemTypes();
     	$task_types = array();
     	foreach ($supported_item_types as $item_type) {
@@ -308,23 +298,15 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	);
     	
     	$this->pageXml .=
-    	'<label row="'.$row.'" col="0"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('user.label')).'</label></args></label>
-    <combobox row="'.$row++.'" col="1"><name>user</name>
-      <args>
-        <disp>action</disp>
-        <elements type="array">'.WuiXml::encode($users).'</elements>
-        <default>'.\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId().'</default>
-      </args>
-    </combobox>
-    <label row="'.$row.'" col="0"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('project.label')).'</label></args></label>
-    			<string row="'.$row++.'" col="1"><name>projectid</name>
+    	'<label row="'.$row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('task.label')).'</label></args></label>
+    			<string row="'.$row++.'" col="1"><name>taskid</name>
               <args>
-            		<id>projectid</id>
+            		<id>taskid</id>
             		<autocomplete>true</autocomplete>
             		<autocompleteminlength>2</autocompleteminlength>
             		<autocompletesearchurl>'.WuiXml::cdata(WuiEventsCall::buildEventsCallString(
                     '',
-                    array(array('view', 'searchproject'))
+                    array(array('view', 'searchtasks'))
                 )).'</autocompletesearchurl>
                 <disp>action</disp>
                 <size>30</size>
@@ -350,32 +332,32 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     array(array('view', 'searchproject'))
                 )).'</autocompletesearchurl>
                 <disp>action</disp>
-                <size>30</size>
+                <size>40</size>
               </args>
             		</string>';
     	}
     	
     	$this->pageXml .= '
-    <label row="'.$row.'" col="0"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('activitydate.label')).'</label></args></label>
+    <label row="'.$row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('activitydate.label')).'</label></args></label>
     <date row="'.$row++.'" col="1"><name>date</name>
               <args>
                 <disp>action</disp>
                 <value type="array">'.WuiXml::encode($start_date_array).'</value>
               </args>
             </date>
-    <label row="'.$row.'" col="0"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('spenttime.label')).'</label></args></label>
+    <label row="'.$row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('spenttime.label')).'</label></args></label>
     <string row="'.$row++.'" col="1"><name>timespent</name>
 		<args>
           <disp>action</disp>
 	      <size>6</size>
 		</args>
 	</string>
-    <label row="'.$row.'" col="0"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('description.label')).'</label></args></label>
+    <label row="'.$row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('description.label')).'</label></args></label>
     <text row="'.$row++.'" col="1"><name>activitydesc</name>
 		<args>
           <disp>action</disp>
-	      <cols>30</cols>
-          <rows>4</rows>
+	      <cols>60</cols>
+          <rows>8</rows>
 		</args>
 	</text>
   </children>
@@ -447,13 +429,15 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     	$items = $core->getSummaries('', false, array('task'));
     	 
-    	$query = $domain_da->execute('SELECT id, title FROM innowork_projects WHERE name LIKE "%'.$_GET['term'].'%"');
     	$k = 0;
-    	 
-    	while (!$query->eof) {
-    		$content[$k]['id'] = $query->getFields('id');
-    		$content[$k++]['value'] = $query->getFields('name');
-    		$query->moveNext();
+    	foreach ($items as $type => $item) {
+        	$query = $domain_da->execute('SELECT id, title FROM '.$item['table'].' WHERE title LIKE "%'.$_GET['term'].'%"');
+        	 
+        	while (!$query->eof) {
+        		$content[$k]['id'] = $type.'-'.$query->getFields('id');
+        		$content[$k++]['value'] = $item['label'].' '.$query->getFields('id').(strlen($query->getFields('title')) ? ': '.$query->getFields('title') : '');
+        		$query->moveNext();
+        	}
     	}
     	echo json_encode($content);
     	InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->halt();

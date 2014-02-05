@@ -38,19 +38,39 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     
     	// Old style require, waiting for Innowork Project upgrade
     	require_once('innowork/projects/InnoworkProject.php');
+
+    	// Extract item type and id
+    	list($tasktype, $taskid) = explode('-', $eventData['taskid_id']);
+
+    	$domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
     	
+    	$core = \Innowork\Core\InnoworkCore::instance(
+    	    '\Innowork\Core\InnoworkCore',
+    	    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+    	    $domain_da
+    	);
+    	
+    	// Extract project id
+    	$items = $core->getSummaries('', false, array('task'));
+    	$query = $domain_da->execute('SELECT projectid FROM '.$items[$tasktype]['table'].' WHERE id="'.$taskid.'"');
+    	if ($query->getNumberRows() > 0) {
+    	    $id = $query->getFields('projectid');
+    	} else {
+    	    $id = 0;
+    	}
+    	 
     	$timesheet->addTimesheetRow(
-    			InnoworkProject::ITEM_TYPE,
-    			$eventData['projectid_id'],
-    			$eventData['user'],
-    			$date_array,
-    			$eventData['activitydesc'],
-    			$eventData['timespent'],
-    			'',
-    			'',
-    			'',
-    			$eventData['tasktype'],
-    			$eventData['taskid']
+    	    InnoworkProject::ITEM_TYPE,
+    	    $id,
+    	    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId(),
+    	    $date_array,
+    	    $eventData['activitydesc'],
+    	    $eventData['timespent'],
+    	    '',
+    	    '',
+    	    '',
+    	    $tasktype,
+    	    $taskid
     	);
     }
     

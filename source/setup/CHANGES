@@ -4,11 +4,13 @@ NEW FEATURES:
 - Added timesheet data entry inside tasks details box. (Alex Pagnoni)
 - Added task timesheet totals inside tasks details box. (Alex Pagnoni)
 - Added timesheet period navigation between months. (Alex Pagnoni)
+- Added task selector in log work panel in place of project selector. (Alex Pagnoni)
 
 CHANGES:
 - Timesheet class is now an Innowork Item. (Alex Pagnoni)
 - Changed minimum Innomatic version to 6.3.0. (Alex Pagnoni)
 - Added checks to avoid logging hours in archived projects. (Alex Pagnoni)
+- Removed user selection from log work panel. (Alex Pagnoni)
 
 FIXES:
 - Fixed calendar sticky date in session bug. (Alex Pagnoni)
