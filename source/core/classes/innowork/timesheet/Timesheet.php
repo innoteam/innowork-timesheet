@@ -532,7 +532,7 @@ class Timesheet extends InnoworkItem
 		$seconds -= $hours*3600;
 		$minutes  = floor($seconds/60);
 		$seconds -= $minutes*60;
-		return sprintf('%02d'.self::TIME_SEPARATOR.'%02d', $hours, $minutes);
+		return sprintf('%d'.self::TIME_SEPARATOR.'%02d', $hours, $minutes);
 	}
 	
 	public static function getTimesheetUsers()

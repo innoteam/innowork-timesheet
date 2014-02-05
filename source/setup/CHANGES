@@ -14,6 +14,7 @@ CHANGES:
 
 FIXES:
 - Fixed calendar sticky date in session bug. (Alex Pagnoni)
+- Fixed time sum method with leading zero. (Alex Pagnoni)
 
 
 
