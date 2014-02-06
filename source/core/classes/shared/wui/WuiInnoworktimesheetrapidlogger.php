@@ -64,9 +64,9 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
             'seconds' => '00'
         );
         
-        $xml = '<vertgroup><children>    <grid><children>
+        $xml = '<vertgroup><children><form><name>timesheet_rapid_logger</name><children>    <grid><children>
             <label row="0" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('activitydate.label')).'</label></args></label>
-    <date row="0" col="1"><name>date</name>
+    <date row="0" col="1"><name>timesheet_add_date</name>
               <args>
              <id>timesheet_add_date</id>
              <disp>action</disp>
@@ -106,6 +106,7 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
     			    <click>xajax_WuiInnoworktimesheetrapidloggerAddTimesheetRow(\''.$itemType.'\',\''.$itemId.'\',\''.$taskType.'\',\''.$taskId.'\',\''.$userId.'\',document.getElementById(\'timesheet_add_date\').value,document.getElementById(\'timesheet_add_activitydesc\').value,document.getElementById(\'timesheet_add_timespent\').value)</click>
     			  </events>
   </button>
+    			        </children></form>
               </children></vertgroup>';
         
         return $xml;
