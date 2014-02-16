@@ -6,7 +6,9 @@ require_once('innowork/core/InnoworkItem.php');
 class Timesheet extends InnoworkItem
 {
 	const ITEM_TYPE = 'timesheetrow';
-	var $mNoAcl = true;
+	public $mNoAcl = true;
+	public $mSearchable = false;
+	public $mNoTrash = true;
 	
 	/**
 	 * Symbol used to separate hours and minutes in a time entry.

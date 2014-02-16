@@ -11,6 +11,7 @@ CHANGES:
 - Changed minimum Innomatic version to 6.3.0. (Alex Pagnoni)
 - Added checks to avoid logging hours in archived projects. (Alex Pagnoni)
 - Removed user selection from log work panel. (Alex Pagnoni)
+- Timesheet is no more searchable as Innowork Item. (Alex Pagnoni)
 
 FIXES:
 - Fixed calendar sticky date in session bug. (Alex Pagnoni)
