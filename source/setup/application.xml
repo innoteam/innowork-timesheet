@@ -12,7 +12,8 @@
 		<category>intranet</category>
 		<iconfile></iconfile>
 		<dependencies>
-			<dependency>innowork-core[3.3.0]</dependency>
+		    <dependency>innomatic[6.4.0]</dependency>
+			<dependency>innowork-core[3.4.0]</dependency>
             <dependency>innowork-groupware</dependency>
 		</dependencies>
 		<options>
@@ -70,6 +71,9 @@
             file="WuiInnoworktimesheetcalendar.php" />
         <wuiwidget name="innoworktimesheetrapidlogger"
             file="WuiInnoworktimesheetrapidlogger.php" />
+
+        <role name="timesheet_user" title="timesheet_user" description="" catalog="innowork-timesheet::roles" />
+        <role name="timesheet_manager" title="timesheet_manager" description="" catalog="innowork-timesheet::roles" />
 
 	</components>
 </application>
