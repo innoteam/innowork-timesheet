@@ -6,6 +6,7 @@ NEW FEATURES:
 - Added timesheet period navigation between months. (Alex Pagnoni)
 - Added task selector in log work panel in place of project selector. (Alex Pagnoni)
 - Added timesheet_user and timesheet_manager roles. (Alex Pagnoni)
+- Added add_hours, add_hours_all and view_hours_all permissions. (Alex Pagnoni)
 
 CHANGES:
 - Timesheet class is now an Innowork Item. (Alex Pagnoni)
