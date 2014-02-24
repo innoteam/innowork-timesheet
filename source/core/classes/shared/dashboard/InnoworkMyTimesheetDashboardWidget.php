@@ -70,8 +70,10 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
     	      		)
     	      ).'</action>
     </args>
-  </button>
-    	      		
+  </button>';
+        
+        if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
+            $xml .= '	
   <button>
     <args>
       <horiz>true</horiz>
@@ -92,8 +94,10 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
     	      		)
     	      ).'</action>
     </args>
-  </button>
-    	      		
+  </button>';
+        }
+        
+        $xml .= '	
   </children></horizgroup>
     	      			
            </children>
@@ -110,5 +114,14 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
     public function getHeight()
     {
         return 90;
+    }
+    
+    public function isVisible()
+    {
+        if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
