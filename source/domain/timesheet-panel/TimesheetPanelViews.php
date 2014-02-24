@@ -214,7 +214,9 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	      		)
     	      ).'</action>
     </args>
-  </button>
+  </button>';
+    	if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('view_hours_all')) {
+    	    $this->pageXml .='
   <button>
     <args>
       <horiz>true</horiz>
@@ -237,7 +239,10 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	      		)
     	      ).'</action>
     </args>
-  </button>
+  </button>';
+    	}
+    	
+    	$this->pageXml .= '
     	          </children></horizgroup>
             </children></vertgroup>
           </children></divframe>';
@@ -245,6 +250,11 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     
     public function viewLogwork($eventData)
     {
+        if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
+            $this->viewDefault($eventData);
+            return;
+        }
+        
     	$this->pageTitle = $this->localeCatalog->getStr('log_work.title');
 
     	$innowork_dossier = new InnoworkProject(
@@ -577,6 +587,11 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     
     public function viewPrintteamreport($eventData)
     {
+        if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('view_hours_all')) {
+            $this->viewDefault($eventData);
+            return;
+        }
+        
         $domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
     
         $innowork_core = \Innowork\Core\InnoworkCore::instance('\Innowork\Core\InnoworkCore', \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(), \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess());

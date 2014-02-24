@@ -29,6 +29,10 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     
     public function executeNewtsrow($eventData)
     {
+        if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
+            return;
+        }
+        
     	$timesheet = new \Innowork\Timesheet\Timesheet(
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
@@ -76,6 +80,12 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     
     public function executeChangetsrow($eventData)
     {
+        if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
+            return;
+        }
+        
+        // TODO: here we must check if the rowid is owned by the current user
+        
     	$timesheet = new \Innowork\Timesheet\Timesheet(
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
@@ -96,10 +106,16 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     
     public function executeRemovetsrow($eventData)
     {
+        if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
+            return;
+        }
+        
     	$timesheet = new \Innowork\Timesheet\Timesheet(
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
     	);
+    	
+    	// TODO: here we must check if the rowid is owned by the current user
     	$timesheet->deleteTimesheetRow($eventData['rowid']);
     }
     

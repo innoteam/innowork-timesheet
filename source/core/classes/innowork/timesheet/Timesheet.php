@@ -37,6 +37,10 @@ class Timesheet extends InnoworkItem
 	        return '';
 	    }
 	
+	    if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
+	        return '';
+	    }
+	    
 	    $item_data = $item->getItem(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId());
 		
 	    $xml = '<divframe><name>timesheettaskdata</name><args><id>timesheettaskdata</id></args><children>';
