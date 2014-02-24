@@ -28,37 +28,6 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         
         $this->icon = 'clock1';
         
-        /*
-        $this->toolbars['view'] = array(
-    'default' => array(
-        'label' => $this->localeCatalog->getStr('applications_button'),
-        'themeimage' => 'listdetailed2',
-        'action' => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
-        'horiz' => 'true'
-        ),
-    'repository' => array(
-        'label' => $this->localeCatalog->getStr('repository.toolbar'),
-        'themeimage' => 'globe2',
-        'action' => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'appcentral', ''))),
-        'horiz' => 'true'
-        ),
-    'keyring' => array(
-        'label' => $this->localeCatalog->getStr('keys.toolbar'),
-        'themeimage' => 'keyhole',
-        'horiz' => 'true',
-        'action' => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString(
-            '',
-            array(
-                array(
-                    'view',
-                    'keyring',
-                    ''
-                )
-            )
-        )
-    )
-);
-        */
         $this->toolbars['view'] = array(
         	'default' => array(
         		'label' => $this->localeCatalog->getStr('timesheet.button'),
@@ -68,14 +37,17 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         	)
         );
         
-        $this->toolbars['log'] = array(
-			'default' => array(
-				'label' => $this->localeCatalog->getStr('log_work.button'),
-				'themeimage' => 'mathadd',
-				'action' => WuiEventsCall::buildEventsCallString('', array(array('view', 'logwork', ''))),
-				'horiz' => 'true'
-			)
-		);
+        if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours') ||
+        	\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours_all')) {
+            $this->toolbars['log'] = array(
+    			'default' => array(
+    				'label' => $this->localeCatalog->getStr('log_work.button'),
+    				'themeimage' => 'mathadd',
+    				'action' => WuiEventsCall::buildEventsCallString('', array(array('view', 'logwork', ''))),
+    				'horiz' => 'true'
+    			)
+    		);
+        }
     }
 
     public function endHelper()
