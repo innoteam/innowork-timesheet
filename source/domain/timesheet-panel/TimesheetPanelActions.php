@@ -240,8 +240,11 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     	      		)
     	      ).'</action>
     </args>
-  </button>
-  <button>
+    </button>';
+
+        if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('view_hours_all')) {
+
+          $xml .= '<button>
     <args>
       <horiz>true</horiz>
       <frame>false</frame>
@@ -263,7 +266,10 @@ class TimesheetPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     	      		)
     	      ).'</action>
     </args>
-  </button>
+    </button>';
+        }
+
+        $xml .= '
     	          </children></horizgroup>
             </children></vertgroup>';
 
