@@ -93,11 +93,24 @@ class Timesheet extends InnoworkItem
   </horizgroup>';
 	    
 	    // Show task timesheet totals by user, if there is logged time
-	    if (count($users_ts['users'])) {
+        if (count($users_ts['users'])) {
+            // Check if the current user can see other users time
+            $seeAllHours = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')
+                ->getCurrentUser()
+                ->hasPermission('view_hours_all');
+            $currentUserId = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')
+                ->getCurrentUser()
+                ->getUserId();
+            
 	        $xml .= '<horizbar/><grid><children>';
 	    
 	        $ts_row = 0;
-	        foreach ($users_ts['users'] as $user_ts) {
+            foreach ($users_ts['users'] as $userId => $user_ts) {
+                if (!($seeAllHours or $userId == $currentUserId)) {
+                    // User cannot see other users time, so skip user row
+                    continue;
+                }
+
 	            $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($user_ts['name']).'</label></args></label>
 		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($user_ts['spenttime']).'</label></args></label>';
 	        }
