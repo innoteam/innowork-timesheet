@@ -14,11 +14,11 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
             'innowork-timesheet::timesheet_dashboard',
             InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
-    	
+
     	$locale_country = new \Innomatic\Locale\LocaleCountry(
 			InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry()
         );
-                
+
         $timesheet = new \Innowork\Timesheet\Timesheet(
         	\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
         	\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
@@ -31,7 +31,7 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
         		InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId(),
         		$locale_country->getDateArrayFromUnixTimestamp(time())
         );
-        
+
         $xml =
         '<vertgroup>
            <children>
@@ -45,7 +45,7 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
         		 <label>'.WuiXml::cdata(sprintf($locale_catalog->getStr('logged_week.label'), $week_sum)).'</label>
         	   </args>
         	 </label>
-        		 		
+
   <horizbar/>
 
   <horizgroup><args><width>0%</width></args><children>
@@ -71,14 +71,15 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
     	      ).'</action>
     </args>
   </button>';
-        
+
         if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
-            $xml .= '	
+            $xml .= '
   <button>
     <args>
       <horiz>true</horiz>
       <frame>false</frame>
       <themeimage>mathadd</themeimage>
+      <mainaction>true</mainaction>
       <label>'.$locale_catalog->getStr('log_work.button').'</label>
       <action>'.WuiXml::cdata(
     	      		\Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString(
@@ -96,10 +97,10 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
     </args>
   </button>';
         }
-        
-        $xml .= '	
+
+        $xml .= '
   </children></horizgroup>
-    	      			
+
            </children>
          </vertgroup>';
 
@@ -115,7 +116,7 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
     {
         return 90;
     }
-    
+
     public function isVisible()
     {
         if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {

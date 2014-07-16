@@ -58,14 +58,14 @@
             classfile="innowork/timesheet/Timesheet.php" classname="Timesheet" icon="kword"
             icontype="apps" domainpanel="timesheet"
             miniicon="folder_txt" summaryname="timesheet-name" showmode="app" />
-            
+
         <dashboardwidget
             name="innoworkmytimesheet"
             panel="timesheet"
             file="InnoworkMyTimesheetDashboardWidget.php"
             catalog="innowork-timesheet::timesheet_dashboard"
             title="mytimesheet"
-            class="\\Shared\\Dashboard\\InnoworkMyTimesheetDashboardWidget" />
+            class="\Shared\Dashboard\InnoworkMyTimesheetDashboardWidget" />
 
         <wuiwidget name="innoworktimesheetcalendar"
             file="WuiInnoworktimesheetcalendar.php" />
@@ -74,7 +74,7 @@
 
         <role name="timesheet_user" title="timesheet_user" description="" catalog="innowork-timesheet::roles" />
         <role name="timesheet_manager" title="timesheet_manager" description="" catalog="innowork-timesheet::roles" />
-        
+
         <permission name="add_hours" title="add_hours" description="" catalog="innowork-timesheet::roles" defaultroles="accounting,employee,seniormanager,projectmanager,freelance,timesheet_user" />
         <permission name="add_hours_all" title="add_hours_all" description="" catalog="innowork-timesheet::roles" defaultroles="accounting,seniormanager,projectmanager,timesheet_manager" />
         <permission name="view_hours_all" title="view_hours_all" description="" catalog="innowork-timesheet::roles"  defaultroles="accounting,hrmanager,seniormanager,projectmanager,timesheet_manager" />
