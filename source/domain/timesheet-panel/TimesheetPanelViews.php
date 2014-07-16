@@ -25,9 +25,9 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             'innowork-timesheet::timesheet_main',
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
-        
+
         $this->icon = 'clock1';
-        
+
         $this->toolbars['view'] = array(
         	'default' => array(
         		'label' => $this->localeCatalog->getStr('timesheet.button'),
@@ -36,7 +36,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         		'horiz' => 'true'
         	)
         );
-        
+
         if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours') ||
         	\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours_all')) {
             $this->toolbars['log'] = array(
@@ -55,7 +55,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	if (!strlen($this->pageTitle)) {
     		$this->pageTitle = $this->localeCatalog->getStr('timesheet.title');
     	}
-    	
+
     	$this->_wuiContainer->addChild(
 			new WuiInnomaticPage(
 				'page',
@@ -81,17 +81,17 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     public function viewDefault($eventData)
     {
     	$country = new \Innomatic\Locale\LocaleCountry(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
-    	
+
     	$dateCatalog = new LocaleCatalog(
     	    'innowork-timesheet::timesheet_widgets',
     	    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
     	);
-    	
+
     	$ts_manager = new \Innowork\Timesheet\Timesheet(
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
     	);
-    	
+
     	$tsdays = $ts_manager->getLoggedUserTimesheetMonthTotals(
     		InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId(),
     		$country->getDateArrayFromUnixTimestamp(time())
@@ -109,7 +109,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	    $curr_month = date('n');
     	}
     	$current_period_label = $dateCatalog->getStr('month_'.$curr_month.'.label').' '.$curr_year;
-    	 
+
     	// Previous period
     	if ($curr_month == 1) {
     	    $prev_year = $curr_year - 1;
@@ -120,7 +120,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	    $prev_month = $curr_month - 1;
         	$prev_period_label = '< '.$dateCatalog->getStr('month_'.$prev_month.'.label');
     	}
-    	
+
     	// Next period
     	if ($curr_month == 12) {
     	    $next_year = $curr_year + 1;
@@ -131,7 +131,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         	$next_month = $curr_month + 1;
         	$next_period_label = $dateCatalog->getStr('month_'.$next_month.'.label').' >';
     	}
-    	
+
     	$this->pageXml = '<divframe><args><id>tscalendar</id></args><children>
     	    <vertgroup><args><width>0%</width></args><children>
     	    <horizgroup><args><width>0%</width><groupalign>center</groupalign></args><children>
@@ -213,42 +213,42 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     </args>
   </button>';
     	}
-    	
+
     	$this->pageXml .= '
     	          </children></horizgroup>
             </children></vertgroup>
           </children></divframe>';
     }
-    
+
     public function viewLogwork($eventData)
     {
         if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
             $this->viewDefault($eventData);
             return;
         }
-        
+
     	$this->pageTitle = $this->localeCatalog->getStr('log_work.title');
 
     	$innowork_dossier = new InnoworkProject(
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
     		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
     	);
-    	
+
     	$supported_item_types = Timesheet::getSupportedItemTypes();
     	$task_types = array();
     	foreach ($supported_item_types as $item_type) {
-    		$task_types[$item_type['type']] = $item_type['label']; 
+    		$task_types[$item_type['type']] = $item_type['label'];
     	}
-    	
+
     	// Projects list
     	$projects = array();
 
     	$row = 0;
-    	
+
     	$this->pageXml =
     	'<vertgroup>
   <children>
-    	
+
 <form><name>tsrow</name>
       <args>
             <action>'.WuiXml::cdata( WuiEventsCall::buildEventsCallString( '', array(
@@ -263,13 +263,13 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
       <children>
 <grid><name>timesheet</name>
   <children>';
-    	
+
     	$country = new \Innomatic\Locale\LocaleCountry(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
-    	
+
     	$year = isset($eventData['year']) ? $eventData['year'] : date('Y');
     	$mon = isset($eventData['mon']) ? $eventData['mon'] : date('m');
     	$mday = isset($eventData['mday']) ? $eventData['mday'] : date('d');
-    	
+
     	$start_date_array = array(
     			'year' => $year,
     			'mon' => $mon,
@@ -278,7 +278,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     			'minutes' => '00',
     			'seconds' => '00'
     	);
-    	
+
     	$this->pageXml .=
     	'<label row="'.$row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('task.label')).'</label></args></label>
     			<string row="'.$row++.'" col="1"><name>taskid</name>
@@ -318,7 +318,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
               </args>
             		</string>';
     	}
-    	
+
     	$this->pageXml .= '
     <label row="'.$row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('activitydate.label')).'</label></args></label>
     <date row="'.$row++.'" col="1"><name>date</name>
@@ -346,12 +346,13 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 </grid>
 
   <horizbar/>
-    		
+
   <button>
     <args>
       <horiz>true</horiz>
       <frame>false</frame>
       <themeimage>mathadd</themeimage>
+      <mainaction>true</mainaction>
       <themeimagetype>mini</themeimagetype>
       <formsubmit>tsrow</formsubmit>
       <label>'.$this->localeCatalog->getStr('add_ts_row.button').'</label>
@@ -378,18 +379,18 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
   </button>
     		</children>
 		</form>
-    	
+
       </children>
 	</vertgroup>';
     }
-    
+
     public function viewSearchproject($eventData)
     {
     	$domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
-    	
+
     	$query = $domain_da->execute('SELECT id, name FROM innowork_projects WHERE name LIKE "%'.$_GET['term'].'%" AND done <> '.$domain_da->formatText($domain_da->fmttrue));
     	$k = 0;
-    	
+
     	while (!$query->eof) {
     		$content[$k]['id'] = $query->getFields('id');
     		$content[$k++]['value'] = $query->getFields('name');
@@ -410,11 +411,11 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	);
 
     	$items = $core->getSummaries('', false, array('task'));
-    	 
+
     	$k = 0;
     	foreach ($items as $type => $item) {
         	$query = $domain_da->execute('SELECT id, title FROM '.$item['table'].' WHERE title LIKE "%'.$_GET['term'].'%"');
-        	 
+
         	while (!$query->eof) {
         		$content[$k]['id'] = $type.'-'.$query->getFields('id');
         		$content[$k++]['value'] = $item['label'].' '.$query->getFields('id').(strlen($query->getFields('title')) ? ': '.$query->getFields('title') : '');
@@ -424,14 +425,14 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	echo json_encode($content);
     	InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->halt();
     }
-    
+
     public function viewPrintuserreport($eventData)
     {
         $domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
-        
+
         $innowork_core = \Innowork\Core\InnoworkCore::instance('\Innowork\Core\InnoworkCore', \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(), \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess());
         $summaries = $innowork_core->getSummaries();
-        
+
         $timesheet_manager = new \Innowork\Timesheet\Timesheet(
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
@@ -441,39 +442,39 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             array('mday' => sprintf('%02d', 1), 'mon' => sprintf('%02d', $eventData['month']), 'year' => $eventData['year']),
             array('mday' => sprintf('%02d', date('t', mktime(0, 0, 0, $eventData['month'], 1, $eventData['year']))), 'mon' => sprintf('%02d', $eventData['month']), 'year' => $eventData['year'])
         );
-        
+
         // Users list
         /*
         $users_query = \Innowork\Timesheet\Timesheet::getTimesheetUsers();
-        
+
         $users = array();
-        
+
         while ( !$users_query->eof )
         {
             $users[$users_query->getFields( 'id' )] = $users_query->getFields( 'lname' ).
             ' '.$users_query->getFields( 'fname' );
-        
+
             $users_query->moveNext();
         }
         */
-        
+
         $headers[0]['label'] = $this->localeCatalog->getStr( 'project.header' );
         $headers[1]['label'] = $this->localeCatalog->getStr( 'activity.header' );
         $headers[2]['label'] = $this->localeCatalog->getStr( 'date.header' );
         $headers[3]['label'] = $this->localeCatalog->getStr( 'activitydesc.header' );
         $headers[4]['label'] = $this->localeCatalog->getStr( 'timespent.header' );
-        
+
         $row = 1;
-        
+
         $country = new LocaleCountry(
             InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getCountry()
         );
-        
+
         echo "<html><head><title>Timesheet Report</title><meta charset=\"UTF-8\"></head><body onload=\"window.print()\">\n";
-        
+
         echo '<table style="width: 100%"><tr><td>User</td><td>Month</td><td>Year</td></tr>
 			<tr><td><strong>'.InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getUserId().'</strong></td><td><strong>'.$eventData['month'].'</strong></td><td><strong>'.$eventData['year'].'</strong></td></tr></table>';
-        
+
         echo "<br><table border=\"0\" cellspacing=\"0\" cellpadding=\"4\" style=\"border: solid 0px; width: 100%;\">\n";
         echo "<tr>\n";
         echo "<th valign=\"top\">".$headers[0]['label']."</th>\n";
@@ -482,93 +483,93 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         echo "<th valign=\"top\">".$headers[3]['label']."</th>\n";
         echo "<th valign=\"top\">".$headers[4]['label']."</th>\n";
         echo "</tr>\n";
-        
+
         $prev_project = '';
-        $prev_task = '';    
+        $prev_task = '';
 
         $sum = 0;
-        
+
         foreach ($timesheet as $ts_row) {
             // Check if this is a different project. If so, print the project header.
             if ($prev_project != $ts_row['itemtype'].$ts_row['itemid']) {
                 $item_title = '';
-            
+
                 if (isset($summaries[$ts_row['itemtype']]) and strlen($ts_row['itemid'])) {
                     $task_query = $domain_da->execute(
                         'SELECT name '.
                         'FROM '.$summaries[$ts_row['itemtype']]['table'].' '.
                         'WHERE id='.$ts_row['itemid']
                     );
-            
+
                     if ($task_query->getNumberRows() > 0) {
                         $item_title = $task_query->getFields('name');
                     }
-            
+
                     if (strlen($item_title)) {
                         $item_title = ': '.$item_title;
                     }
                 }
-            
+
                 // $summaries[$ts_row['itemtype']]['label']
                 echo '<tr><td colspan="5"><strong>'.$this->localeCatalog->getStr( 'project.header' ).' '.$ts_row['itemid'].$item_title.'</strong></td></tr>';
             }
-            
+
             // Check if this is a different task. If so, print the task header.
             if ($prev_task != $ts_row['tasktype'].$ts_row['taskid']) {
                 $task_title = '';
-            
+
                 if (isset($summaries[$ts_row['tasktype']]) and strlen($ts_row['taskid'])) {
                     $task_query = $domain_da->execute(
                         'SELECT title '.
                         'FROM '.$summaries[$ts_row['tasktype']]['table'].' '.
                         'WHERE id='.$ts_row['taskid']
                     );
-            
+
                     if ($task_query->getNumberRows() > 0) {
                         $task_title = $task_query->getFields('title');
                     }
-            
+
                     if (strlen($task_title)) {
                         $task_title = ': '.$task_title;
                     }
                 }
-            
+
                 echo '<tr><td></td><td colspan="4"><strong>'.$summaries[$ts_row['tasktype']]['label'].' '.$ts_row['taskid'].$task_title.'</strong></td></tr>';
             }
-        
+
             echo "<tr>\n";
             echo "<td></td><td></td>\n";
             echo "<td valign=\"top\">".$country->FormatShortArrayDate( $ts_row['activitydate'] )."</td>\n";
             echo "<td valign=\"top\">".nl2br( $ts_row['description'] )."</td>\n";
             echo "<td align=\"right\" valign=\"top\">".$ts_row['spenttime']."</td>\n";
             echo "</tr>\n";
-            
+
             // Keep track of previous task type/id
             $prev_task = $ts_row['tasktype'].$ts_row['taskid'];
             $prev_project = $ts_row['itemtype'].$ts_row['itemid'];
-            
+
             $sum = \Innowork\Timesheet\Timesheet::sumTime($sum, $ts_row['spenttime']);
         }
         echo "</table>\n";
-        
+
         echo "<p>".$this->localeCatalog->getStr('month_total_logged.label')." <strong>".$sum."</strong></p>\n";
         echo "</body></html>\n";
-        
+
         InnomaticContainer::instance('innomaticcontainer')->halt();
     }
-    
+
     public function viewPrintteamreport($eventData)
     {
         if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('view_hours_all')) {
             $this->viewDefault($eventData);
             return;
         }
-        
+
         $domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
-    
+
         $innowork_core = \Innowork\Core\InnoworkCore::instance('\Innowork\Core\InnoworkCore', \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(), \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess());
         $summaries = $innowork_core->getSummaries();
-    
+
         $timesheet_manager = new \Innowork\Timesheet\Timesheet(
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
@@ -576,63 +577,63 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $timesheet = $timesheet_manager->getLoggedTeamTimesheetMonthTotals(
             array('mday' => sprintf('%02d', 1), 'mon' => sprintf('%02d', $eventData['month']), 'year' => $eventData['year'])
         );
-    
+
         // Users list
         /*
         $users_query = \Innowork\Timesheet\Timesheet::getTimesheetUsers();
-    
+
         $users = array();
-    
+
         while ( !$users_query->eof )
         {
         $users[$users_query->getFields( 'id' )] = $users_query->getFields( 'lname' ).
         ' '.$users_query->getFields( 'fname' );
-    
+
         $users_query->moveNext();
         }
         */
-    
+
             $row = 1;
-    
+
                 $country = new LocaleCountry(
             InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getCountry()
         );
-    
+
                 $month_days = date('t', mktime(0, 0, 0, $eventData['month'], 1, $eventData['year']));
                 $month = sprintf('%02d', $eventData['month']);
-                
+
         echo "<html><head><title>Team Timesheet Report</title><meta charset=\"UTF-8\">
 <style type=\"text/css\">
 <!--
    @media print{
       @page {size: landscape;}
     }
-            
+
 * { font-family: arial, helvetica, sans-serif; font-size: 8pt; }
 -->
-</style>            
+</style>
             </head><body onload=\"window.print()\">\n";
-    
+
         echo '<table style="width: 100%"><tr><td>Month</td><td>Year</td></tr>
 			<tr><td><strong>'.$eventData['month'].'</strong></td><td><strong>'.$eventData['year'].'</strong></td></tr></table>';
-    
+
         echo "<br><table border=\"1\" cellspacing=\"0\" cellpadding=\"4\" style=\"border: solid 1px; width: 100%;\">\n";
         echo "<tr>\n";
         echo "<th valign=\"top\">".$this->localeCatalog->getStr('user.header')."</th>\n";
-        
+
         for ($i = 1; $i <= $month_days; $i++) {
             echo "<th valign=\"top\">".$i."</th>\n";
         }
         echo "<th valign=\"top\">Totale</th>\n";
         echo "</tr>\n";
-    
+
         $sum = 0;
-        
+
         $sum_days = array();
-        
+
         // Users list
         $users_query = \Innowork\Timesheet\Timesheet::getTimesheetUsers();
-        
+
         while (!$users_query->eof) {
             $userid = $users_query->getFields('id');
             $sum_user = 0;
@@ -664,15 +665,15 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         }
         echo '<td align="center">'.$sum.'</td>';
         echo "</tr>\n";
-        
+
         echo "</table>\n";
-    
+
         echo "<p>".$this->localeCatalog->getStr('month_total_logged.label')." <strong>".$sum."</strong></p>\n";
         echo "</body></html>\n";
-    
+
         InnomaticContainer::instance('innomaticcontainer')->halt();
     }
-    
+
     public static function calendar_show_event_action_builder( $id )
     {
     	return WuiEventsCall::buildEventsCallString( '', array( array(
@@ -681,7 +682,7 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     			array( 'id' => $id )
     	) ) );
     }
-    
+
     public static function calendar_show_day_action_builder(
     		$year,
     		$month,
