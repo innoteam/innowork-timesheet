@@ -48,29 +48,7 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
 
   <horizbar/>
 
-  <horizgroup><args><width>0%</width></args><children>
-
-  <button>
-    <args>
-      <horiz>true</horiz>
-      <frame>false</frame>
-      <themeimage>clock1</themeimage>
-      <label>'.$locale_catalog->getStr('timesheet.button').'</label>
-      <action>'.WuiXml::cdata(
-    	      		\Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString(
-    	      				'timesheet',
-    	      				array(
-    	      						array(
-    	      								'view',
-    	      								'default',
-    	      								array(
-    	      								)
-    	      						)
-    	      				)
-    	      		)
-    	      ).'</action>
-    </args>
-  </button>';
+  <horizgroup><args><width>0%</width></args><children>';
 
         if (\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
             $xml .= '
@@ -99,6 +77,27 @@ class InnoworkMyTimesheetDashboardWidget extends \Innomatic\Desktop\Dashboard\Da
         }
 
         $xml .= '
+  <button>
+    <args>
+      <horiz>true</horiz>
+      <frame>false</frame>
+      <themeimage>clock1</themeimage>
+      <label>'.$locale_catalog->getStr('timesheet.button').'</label>
+      <action>'.WuiXml::cdata(
+    	      		\Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString(
+    	      				'timesheet',
+    	      				array(
+    	      						array(
+    	      								'view',
+    	      								'default',
+    	      								array(
+    	      								)
+    	      						)
+    	      				)
+    	      		)
+    	      ).'</action>
+    </args>
+  </button>
   </children></horizgroup>
 
            </children>
