@@ -1,4 +1,4 @@
-1.x.x
+1.2.0 - 2014/07/25
 ------------------
 NEW FEATURES:
 - Added timesheet data entry inside tasks details box. (Alex Pagnoni)
@@ -8,6 +8,8 @@ NEW FEATURES:
 - Added timesheet_user and timesheet_manager roles. (Alex Pagnoni)
 - Added add_hours, add_hours_all, view_hours_all and consolidate_hours
   permissions. (Alex Pagnoni)
+- Added check for archived items; when the item (project) has been archived,
+  users can't add timesheet rows. (Alex Pagnoni)
 
 CHANGES:
 - Timesheet class is now an Innowork Item. (Alex Pagnoni)
@@ -23,7 +25,7 @@ FIXES:
 
 
 
-1.1.0 - 2014/01/07 
+1.1.0 - 2014/01/07
 ------------------
 NEW FEATURES:
 - Added dashboard widget with personal timesheet summary. (Alex Pagnoni)
