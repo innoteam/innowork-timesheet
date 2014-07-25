@@ -1,3 +1,28 @@
+1.x.x
+------------------
+NEW FEATURES:
+- Added timesheet data entry inside tasks details box. (Alex Pagnoni)
+- Added task timesheet totals inside tasks details box. (Alex Pagnoni)
+- Added timesheet period navigation between months. (Alex Pagnoni)
+- Added task selector in log work panel in place of project selector. (Alex Pagnoni)
+- Added timesheet_user and timesheet_manager roles. (Alex Pagnoni)
+- Added add_hours, add_hours_all, view_hours_all and consolidate_hours
+  permissions. (Alex Pagnoni)
+
+CHANGES:
+- Timesheet class is now an Innowork Item. (Alex Pagnoni)
+- Changed minimum Innomatic version to 6.3.0. (Alex Pagnoni)
+- Added checks to avoid logging hours in archived projects. (Alex Pagnoni)
+- Removed user selection from log work panel. (Alex Pagnoni)
+- Timesheet is no more searchable as Innowork Item. (Alex Pagnoni)
+
+FIXES:
+- Fixed calendar sticky date in session bug. (Alex Pagnoni)
+- Fixed time sum method with leading zero. (Alex Pagnoni)
+- Added missing no ACL option. (Alex Pagnoni)
+
+
+
 1.1.0 - 2014/01/07 
 ------------------
 NEW FEATURES:

@@ -13,6 +13,8 @@
 		<field	name="costtype"	type="integer"/>
 		<field	name="reportingperiod"	type="text"/>
 		<field name="consolidated" type="boolean"/>
+        <field  name="tasktype"   type="text"/>
+        <field  name="taskid"   type="integer"/>
       
 		<key	field="id"	type="unique"/>
 	</table>

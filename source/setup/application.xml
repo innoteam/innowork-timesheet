@@ -4,15 +4,16 @@
 	<definition>
 		<idname>innowork-timesheet</idname>
 		<release>
-			<version>1.1.0</version>
-			<date>2014/01/07</date>
+			<version>1.2.0</version>
+			<date>2014/07/25</date>
 			<changesfile>CHANGES</changesfile>
 		</release>
 		<description>Innowork Timesheet</description>
 		<category>intranet</category>
 		<iconfile></iconfile>
 		<dependencies>
-			<dependency>innowork-core[3.1]</dependency>
+		    <dependency>innomatic[6.4.0]</dependency>
+			<dependency>innowork-core[3.4.0]</dependency>
             <dependency>innowork-groupware</dependency>
 		</dependencies>
 		<options>
@@ -21,19 +22,19 @@
 		<legal>
 			<author>
 				<name>Innoteam Srl</name>
-				<email>info@innoteam.it</email>
-				<web>http://www.innoteam.it/</web>
+				<email>info@innomatic.io</email>
+				<web>http://www.innomatic.io/</web>
 			</author>
 			<copyright>Copyright (c) 2013-2014 Innoteam Srl</copyright>
 			<license>Commercial</license>
 			<licensefile>LICENSE</licensefile>
 		</legal>
 		<support>
-			<supportemail>helpdesk@innoteam.it</supportemail>
-			<bugsemail>helpdesk@innoteam.it</bugsemail>
+			<supportemail>helpdesk@innomatic.io</supportemail>
+			<bugsemail>helpdesk@innomatic.io</bugsemail>
 			<maintainer>
 				<name>Alex Pagnoni</name>
-				<email>alex.pagnoni@innoteam.it</email>
+				<email>alex.pagnoni@innomatic.io</email>
 			</maintainer>
 		</support>
 	</definition>
@@ -52,7 +53,11 @@
         <domaintable name="innowork_timesheet"
             file="innowork_timesheet.xml" />
 
-		<class name="innowork/timesheet/InnoworkTimesheet.php" />
+        <innoworkitemtype name="timesheetrow" file="timesheetrow"
+            catalog="innowork-timesheet::timesheet_misc"
+            classfile="innowork/timesheet/Timesheet.php" classname="Timesheet" icon="kword"
+            icontype="apps" domainpanel="timesheet"
+            miniicon="folder_txt" summaryname="timesheet-name" showmode="app" />
 
         <dashboardwidget
             name="innoworkmytimesheet"
@@ -60,10 +65,20 @@
             file="InnoworkMyTimesheetDashboardWidget.php"
             catalog="innowork-timesheet::timesheet_dashboard"
             title="mytimesheet"
-            class="\\Shared\\Dashboard\\InnoworkMyTimesheetDashboardWidget" />
+            class="\Shared\Dashboard\InnoworkMyTimesheetDashboardWidget" />
 
         <wuiwidget name="innoworktimesheetcalendar"
             file="WuiInnoworktimesheetcalendar.php" />
+        <wuiwidget name="innoworktimesheetrapidlogger"
+            file="WuiInnoworktimesheetrapidlogger.php" />
+
+        <role name="timesheet_user" title="timesheet_user" description="" catalog="innowork-timesheet::roles" />
+        <role name="timesheet_manager" title="timesheet_manager" description="" catalog="innowork-timesheet::roles" />
+
+        <permission name="add_hours" title="add_hours" description="" catalog="innowork-timesheet::roles" defaultroles="accounting,employee,seniormanager,projectmanager,freelance,timesheet_user" />
+        <permission name="add_hours_all" title="add_hours_all" description="" catalog="innowork-timesheet::roles" defaultroles="accounting,seniormanager,projectmanager,timesheet_manager" />
+        <permission name="view_hours_all" title="view_hours_all" description="" catalog="innowork-timesheet::roles"  defaultroles="accounting,hrmanager,seniormanager,projectmanager,timesheet_manager" />
+        <permission name="consolidate_hours" title="consolidate_hours" description="" catalog="innowork-timesheet::roles"  defaultroles="accounting,hrmanager,seniormanager,projectmanager,timesheet_manager" />
 
 	</components>
 </application>
