@@ -27,7 +27,7 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
         if (isset($this->mArgs['tasktype']) and strlen($this->mArgs['tasktype'])) $this->mTaskType = $this->mArgs['tasktype'];
         if (isset($this->mArgs['taskid']) and strlen($this->mArgs['taskid'])) $this->mTaskId = $this->mArgs['taskid'];
         if (isset($this->mArgs['userid']) and strlen($this->mArgs['userid'])) $this->mUserId = $this->mArgs['userid'];
-        
+
         $this->fillDefinition();
     }
 
@@ -43,18 +43,18 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
 
         return true;
     }
-   
+
     public function getWidgetXml($itemType, $itemId, $taskType, $taskId, $userId)
     {
         $localeCatalog = new LocaleCatalog(
             'innowork-timesheet::timesheet_main',
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
-        
+
         $year = isset($eventData['year']) ? $eventData['year'] : date('Y');
         $mon = isset($eventData['mon']) ? $eventData['mon'] : date('m');
         $mday = isset($eventData['mday']) ? $eventData['mday'] : date('d');
-         
+
         $start_date_array = array(
             'year' => $year,
             'mon' => $mon,
@@ -63,7 +63,7 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
             'minutes' => '00',
             'seconds' => '00'
         );
-        
+
         $xml = '<vertgroup><children><form><name>timesheet_rapid_logger</name><children>    <grid><children>
             <label row="0" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('activitydate.label')).'</label></args></label>
     <date row="0" col="1"><name>timesheet_add_date</name>
@@ -91,7 +91,7 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
         </args>
     </text>
     </children></grid>
-        
+
   <button>
     <args>
       <horiz>true</horiz>
@@ -108,42 +108,72 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
   </button>
     			        </children></form>
               </children></vertgroup>';
-        
+
         return $xml;
     }
-    
+
     public static function ajaxAddTimesheetRow($itemType, $itemId, $taskType, $taskId, $userId, $date, $activityDesc, $timeSpent)
     {
-		$timesheet = new \Innowork\Timesheet\Timesheet(
-		    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
-		    \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
-		);
-		$locale_country = new \Innomatic\Locale\LocaleCountry(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
-		$date_array = $locale_country->getDateArrayFromShortDatestamp($date);
-    	
-        $timesheet->addTimesheetRow(
-            $itemType,
-			$itemId,
-            $userId,
-            $date_array,
-            $activityDesc,
-            $timeSpent,
-            '',
-            '',
-            '',
-            $taskType,
-            $taskId
+        // Check if the item has been archived; if so, user cannot add timesheet rows
+        $summary = \Innowork\Core\InnoworkCore::instance(
+            '\Innowork\Core\InnoworkCore',
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+        )->getSummaries();
+
+        if (!isset($summary[$itemType])) {
+            return false;
+        }
+
+        $class_name = $summary[$itemType]['classname'];
+        if (!class_exists($class_name)) {
+            return false;
+        }
+
+        $item = new $class_name(
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess(),
+            $itemId
         );
-        
+
+        if (!is_object($item)) {
+            return false;
+        }
+
+        $itemData = $item->getItem(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId());
+
+        if ($itemData['done'] != InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()->fmttrue) {
+            $timesheet = new \Innowork\Timesheet\Timesheet(
+                \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+                \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+            );
+            $locale_country = new \Innomatic\Locale\LocaleCountry(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getCountry());
+            $date_array = $locale_country->getDateArrayFromShortDatestamp($date);
+
+            $timesheet->addTimesheetRow(
+                $itemType,
+                $itemId,
+                $userId,
+                $date_array,
+                $activityDesc,
+                $timeSpent,
+                '',
+                '',
+                '',
+                $taskType,
+                $taskId
+            );
+        }
+
         $objResponse = new XajaxResponse();
         $xml = self::getTimesheetBoxContent($itemType, $itemId, $taskType, $taskId);
         $html = WuiXml::getContentFromXml('', $xml);
-        
+
         $objResponse->addAssign("timesheettaskdata", "innerHTML", $html);
-        
+
         return $objResponse;
     }
-    
+
     public static function getTimesheetBoxContent($itemType, $itemId, $taskType, $taskId)
     {
         $summary = \Innowork\Core\InnoworkCore::instance(
@@ -155,18 +185,18 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
         if (!isset($summary[$taskType])) {
             return false;
         }
-        
+
         $class_name = $summary[$taskType]['classname'];
         if (!class_exists($class_name)) {
             return false;
         }
-        
+
         $item = new $class_name(
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess(),
             $taskId
         );
-        
+
         if (!is_object($item)) {
             return false;
         }
@@ -175,7 +205,7 @@ class WuiInnoworktimesheetrapidlogger extends \Shared\Wui\WuiXml
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
         );
-        
+
         // Get the xml content
         $xml = $timesheet->getExternalItemWidgetXmlDataContent(
         	$itemType,

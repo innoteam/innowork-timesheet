@@ -9,13 +9,13 @@ class Timesheet extends InnoworkItem
 	public $mNoAcl = true;
 	public $mSearchable = false;
 	public $mNoTrash = true;
-	
+
 	/**
 	 * Symbol used to separate hours and minutes in a time entry.
 	 * @var string
 	 */
 	const TIME_SEPARATOR = '.';
-	
+
 	public function __construct(
 			$rrootDb,
 			$rdomainDA,
@@ -28,21 +28,21 @@ class Timesheet extends InnoworkItem
 				$rowId
 		);
 	}
-	
+
 	// Innowork related methods
-	
+
 	public function getExternalItemWidgetXmlData($item)
 	{
 	    if (!$item->hasTypeTag('task')) {
 	        return '';
 	    }
-	
+
 	    if (!\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->hasPermission('add_hours')) {
 	        return '';
 	    }
-	    
+
 	    $item_data = $item->getItem(\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId());
-		
+
 	    $xml = '<divframe><name>timesheettaskdata</name><args><id>timesheettaskdata</id></args><children>';
 	    $xml .= $this->getExternalItemWidgetXmlDataContent(
 	        'project',
@@ -51,17 +51,17 @@ class Timesheet extends InnoworkItem
 	        $item->getItemId()
 	    );
 	    $xml .= '</children></divframe>';
-	
+
 	    return $xml;
 	}
-	
+
 	public function getExternalItemWidgetXmlDataContent($itemType, $itemId, $taskType, $taskId)
 	{
 	    $localeCatalog = new LocaleCatalog(
 	        'innowork-timesheet::timesheet_main',
 	        \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
 	    );
-	    
+
 	    // Get task timesheet totals by user
 	    $users_ts = $this->getLoggedTaskTimesheetTotals(
 	        $taskType,
@@ -91,7 +91,7 @@ class Timesheet extends InnoworkItem
           </label>
     </children>
   </horizgroup>';
-	    
+
 	    // Show task timesheet totals by user, if there is logged time
         if (count($users_ts['users'])) {
             // Check if the current user can see other users time
@@ -101,9 +101,9 @@ class Timesheet extends InnoworkItem
             $currentUserId = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')
                 ->getCurrentUser()
                 ->getUserId();
-            
+
 	        $xml .= '<horizbar/><grid><children>';
-	    
+
 	        $ts_row = 0;
             foreach ($users_ts['users'] as $userId => $user_ts) {
                 if (!($seeAllHours or $userId == $currentUserId)) {
@@ -114,13 +114,43 @@ class Timesheet extends InnoworkItem
 	            $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><label>'.WuiXml::cdata($user_ts['name']).'</label></args></label>
 		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($user_ts['spenttime']).'</label></args></label>';
 	        }
-	    
+
 	        $xml .= '<label row="'.$ts_row.'" col="0" halign="right"><args><bold>true</bold><label>'.WuiXml::cdata($localeCatalog->getStr('task_total_logged.label')).'</label></args></label>
 		            <label row="'.$ts_row++.'" col="1" halign="left"><args><label>'.WuiXml::cdata($users_ts['totals']['logged']).'</label></args></label>
-		        </children></grid><horizbar/>';
+		        </children></grid>';
 	    }
-	    
-	    $xml .= '<innoworktimesheetrapidlogger>
+
+        // Check if the item has been archived; if so, user cannot add timesheet rows
+        $summary = \Innowork\Core\InnoworkCore::instance(
+            '\Innowork\Core\InnoworkCore',
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
+        )->getSummaries();
+
+        if (!isset($summary[$itemType])) {
+            return false;
+        }
+
+        $class_name = $summary[$itemType]['classname'];
+        if (!class_exists($class_name)) {
+            return false;
+        }
+
+        $item = new $class_name(
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess(),
+            $itemId
+        );
+
+        if (!is_object($item)) {
+            return false;
+        }
+
+        $itemData = $item->getItem(InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getUserId());
+
+        if ($itemData['done'] != InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()->fmttrue) {
+            $xml .= '<horizbar/>
+                <innoworktimesheetrapidlogger>
           		  <args>
           		    <userid></userid>
           		    <itemtype>'.$itemType.'</itemtype>
@@ -128,15 +158,16 @@ class Timesheet extends InnoworkItem
           		    <tasktype>'.$taskType.'</tasktype>
           		    <taskid>'.$taskId.'</taskid>
           		  </args>
-          		</innoworktimesheetrapidlogger>
-	    
-          		</children></vertgroup>';
-	    
-	    return $xml;
+          		</innoworktimesheetrapidlogger>';
+        }
+
+        $xml .= '</children></vertgroup>';
+
+        return $xml;
 	}
-	
+
 	// Timesheet methods
-	
+
 	public function addTimesheetRow(
 		$itemType,
 		$itemId,
@@ -149,19 +180,19 @@ class Timesheet extends InnoworkItem
 		$reportingPeriod,
 		$taskType = '',
 		$taskId = '0'
-	) {		 
+	) {
 		if (!strlen($costType)) $costType = 0;
 		if (!strlen($userId)) $userId = InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getUserId();
-	
+
 		$timestamp = $this->mrDomainDA->getTimestampFromDateArray( $activityDate );
 		$domainDa = $this->mrDomainDA;
-	
+
 		// Reformat spent time string
 		$spentTime = str_replace(array(':', ','), '.', $spentTime);
 		if (strpos($spentTime, '.') === false) {
 			$spentTime = '0.'.$spentTime;
 		}
-		
+
 		$result = $domainDa->execute(
 			'INSERT INTO innowork_timesheet VALUES('.
 			$domainDa->getNextSequenceValue('innowork_timesheet_id_seq').','.
@@ -179,10 +210,10 @@ class Timesheet extends InnoworkItem
 			$domainDa->formatText($taskId).
 			')'
 		);
-	
+
 		return $result;
 	}
-	
+
 	public function changeTimesheetRow(
 		$rowId,
 		$userId,
@@ -193,13 +224,13 @@ class Timesheet extends InnoworkItem
 		$costType
 	) {
 		$result = false;
-		
+
 		if (!strlen($costType)) $costType = 0;
 		if (!strlen($userId)) $userId = InnomaticContainer::instance('innomaticcontainer')->getCurrentUser()->getUserId();
-	
+
 		$domainDa = $this->mrDomainDA;
 		$timestamp = $domainDa->getTimestampFromDateArray( $activityDate );
-	
+
 		$result = $domainDa->execute(
 				'UPDATE innowork_timesheet SET '.
 				'userid = '.$userId.', '.
@@ -210,29 +241,29 @@ class Timesheet extends InnoworkItem
 				'costtype = '.$costType.' '.
 				'WHERE id='.$rowId
 		);
-	
+
 		return $result;
 	}
-	
+
 	public function deleteTimesheetRow($rowId)
 	{
 		$rowId = (int)$rowId;
-	
+
 		if (!$rowId) {
 			return false;
 		}
-		
+
 		return $this->mrDomainDA->execute(
 			'DELETE FROM innowork_timesheet '.
 			'WHERE id='.$rowId
 		);
 	}
-	
+
 	public function consolidateTimesheetRow($rowId)
 	{
 		$result = false;
 		$rowId = (int)$rowId;
-	
+
 		if ($rowId) {
 			$result = $this->mrDomainDA->execute(
 				'UPDATE innowork_timesheet '.
@@ -240,31 +271,31 @@ class Timesheet extends InnoworkItem
 				'WHERE id='.$rowId
 			);
 		}
-	
+
 		return $result;
 	}
-	
+
 	public function unconsolidateTimesheetRow($rowId)
 	{
 		$rowId = (int)$rowId;
-	
+
 		if (!$rowId) {
 			return false;
 		}
-		
+
 		return $result = $this->mrDomainDA->execute(
 			'UPDATE innowork_timesheet '.
 			'SET consolidated = '.$this->mrDomainDA->formatText( $this->mrDomainDA->fmtfalse ).' '.
 			'WHERE id='.$rowId
 		);
 	}
-	
+
 	// Generic timesheet extractions
-	
+
 	public function getTimesheet($itemType = '', $itemId = '', $taskType = '', $taskId = '')
 	{
 	    $result = array();
-	
+
 	    $timesheet_query = $this->mrDomainDA->execute(
 	        'SELECT * '.
 	        'FROM innowork_timesheet '.
@@ -274,7 +305,7 @@ class Timesheet extends InnoworkItem
 	            'AND tasktype='.$this->mrDomainDA->formatText($taskType).' AND taskid='.$itemId.' ' : '').
 	        'ORDER BY activitydate DESC'
 	    );
-	
+
 	    while (!$timesheet_query->eof) {
 	        $result[] = array(
 	            'id' => $timesheet_query->getFields('id'),
@@ -291,20 +322,20 @@ class Timesheet extends InnoworkItem
 	            'tasktype' => $timesheet_query->getFields('tasktype'),
 	            'taskid' => $timesheet_query->getFields('taskid')
 	        );
-	
+
 	        $timesheet_query->moveNext();
 	    }
-	
+
 	    return $result;
 	}
-	
+
 	public function getUserTimesheet($userId, $fromDate, $toDate)
 	{
 	    $result = array();
-	    
+
 	    $from = $fromDate['year'].'-'.$fromDate['mon'].'-'.$fromDate['mday'].' 00:00:00';
 	    $to = $toDate['year'].'-'.$toDate['mon'].'-'.$toDate['mday'].' 23:59:59';
-	
+
 	    $timesheet_query = $this->mrDomainDA->execute(
 	        'SELECT * '.
 	        'FROM innowork_timesheet '.
@@ -313,7 +344,7 @@ class Timesheet extends InnoworkItem
 			'AND activitydate <= '.$this->mrDomainDA->formatText($to).' '.
 	        'ORDER BY itemid, tasktype, taskid, activitydate DESC'
 	    );
-	
+
 	    while (!$timesheet_query->eof) {
 	        $result[] = array(
 	            'id' => $timesheet_query->getFields('id'),
@@ -327,20 +358,20 @@ class Timesheet extends InnoworkItem
 	            'tasktype' => $timesheet_query->getFields('tasktype'),
 	            'taskid' => $timesheet_query->getFields('taskid')
 	        );
-	
+
 	        $timesheet_query->moveNext();
 	    }
-	
+
 	    return $result;
 	}
-	
+
 	// User related timesheet extractions
-	
+
 	public function getLoggedUserTimesheetDayTotal($userId, $day)
 	{
 		$from = $day['year'].'-'.$day['mon'].'-'.$day['mday'].' 00:00:00';
 		$to = $day['year'].'-'.$day['mon'].'-'.$day['mday'].' 23:59:59';
-			
+
 		$query = $this->mrDomainDA->execute(
 			'SELECT spenttime
 			FROM innowork_timesheet
@@ -348,14 +379,14 @@ class Timesheet extends InnoworkItem
 			AND activitydate >= '.$this->mrDomainDA->formatText($from).'
 			AND activitydate <= '.$this->mrDomainDA->formatText($to)
 		);
-		
+
 		$sum = 0;
-		
+
 		while (!$query->eof) {
 			$sum = self::sumTime($sum, $query->getFields('spenttime'));
 			$query->moveNext();
 		}
-		
+
 		return $sum;
 	}
 
@@ -364,10 +395,10 @@ class Timesheet extends InnoworkItem
 		$dateTime = new \DateTime($day['year'].'-'.$day['mon'].'-'.$day['mday']);
 		$week_start = clone $dateTime->modify(('Sunday' == $dateTime->format('l')) ? 'Monday last week' : 'Monday this week');
 		$week_end = clone $dateTime->modify('Sunday this week');
-		
+
 		$from = $week_start->format('Y-m-d 00:00:00');
 		$to = $week_end->format('Y-m-d 23:59:59');
-			
+
 		$query = $this->mrDomainDA->execute(
 				'SELECT spenttime
 			FROM innowork_timesheet
@@ -375,22 +406,22 @@ class Timesheet extends InnoworkItem
 			AND activitydate >= '.$this->mrDomainDA->formatText($from).'
 			AND activitydate <= '.$this->mrDomainDA->formatText($to)
 		);
-	
+
 		$sum = 0;
-	
+
 		while (!$query->eof) {
 			$sum = self::sumTime($sum, $query->getFields('spenttime'));
 			$query->moveNext();
 		}
-	
+
 		return $sum;
 	}
-	
+
 	public function getLoggedUserTimesheetMonthTotal($userId, $date)
 	{
 		$from = date('Y-m-d 00:00:00', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
 		$to = date('Y-m-t 23:59:59', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
-			
+
 		$query = $this->mrDomainDA->execute(
 				'SELECT spenttime
 			FROM innowork_timesheet
@@ -398,22 +429,22 @@ class Timesheet extends InnoworkItem
 			AND activitydate >= '.$this->mrDomainDA->formatText($from).'
 			AND activitydate <= '.$this->mrDomainDA->formatText($to)
 		);
-		
+
 		$sum = 0;
-		
+
 		while (!$query->eof) {
 			$sum = self::sumTime($sum, $query->getFields('spenttime'));
 			$query->moveNext();
 		}
-		
+
 		return $sum;
 	}
-	
+
 	public function getLoggedUserTimesheetMonthTotals($userId, $date)
 	{
 		$from = date('Y-m-d 00:00:00', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
 		$to = date('Y-m-t 23:59:59', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
-			
+
 		$query = $this->mrDomainDA->execute(
 				'SELECT spenttime, activitydate
 			FROM innowork_timesheet
@@ -421,13 +452,13 @@ class Timesheet extends InnoworkItem
 			AND activitydate >= '.$this->mrDomainDA->formatText($from).'
 			AND activitydate <= '.$this->mrDomainDA->formatText($to)
 		);
-	
+
 		$tsdays['days'] = array();
 		$tsdays['total']['logged'] = 0;
-	
+
 		while (!$query->eof) {
 			$activity_date = $this->mrDomainDA->getDateArrayFromTimestamp($query->getFields('activitydate'));
-			
+
 			if (isset($tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'])) {
 				$tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = self::sumTime(
 					$tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'],
@@ -436,21 +467,21 @@ class Timesheet extends InnoworkItem
 			} else {
 				$tsdays['days'][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = $query->getFields('spenttime');
 			}
-			
+
 			// Advance month total
 			$tsdays['total']['logged'] = self::sumTime($tsdays['total']['logged'], $query->getFields('spenttime'));
-				
+
 			$query->moveNext();
 		}
-	
+
 		return $tsdays;
 	}
-	
+
 	public function getLoggedTeamTimesheetMonthTotals($date)
 	{
 	    $from = date('Y-m-d 00:00:00', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
 	    $to = date('Y-m-t 23:59:59', mktime(0, 0, 0, $date['mon'], 1, $date['year']));
-	    	
+
 	    $query = $this->mrDomainDA->execute(
 	        'SELECT ts.userid, ts.spenttime, ts.activitydate
 			FROM innowork_timesheet AS ts
@@ -459,13 +490,13 @@ class Timesheet extends InnoworkItem
 			activitydate >= '.$this->mrDomainDA->formatText($from).'
 			AND activitydate <= '.$this->mrDomainDA->formatText($to)
 	    );
-	
+
 	    $tsdays['days'] = array();
 	    $tsdays['total']['logged'] = 0;
-	
+
 	    while (!$query->eof) {
 	        $activity_date = $this->mrDomainDA->getDateArrayFromTimestamp($query->getFields('activitydate'));
-	        	
+
 	        if (isset($tsdays['days'][$query->getFields('userid')][$date['year']][$date['mon']][$activity_date['mday']]['sum'])) {
 	            $tsdays['days'][$query->getFields('userid')][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = self::sumTime(
 	                $tsdays['days'][$query->getFields('userid')][$date['year']][$date['mon']][$activity_date['mday']]['sum'],
@@ -474,21 +505,21 @@ class Timesheet extends InnoworkItem
 	        } else {
 	            $tsdays['days'][$query->getFields('userid')][$date['year']][$date['mon']][$activity_date['mday']]['sum'] = $query->getFields('spenttime');
 	        }
-	        
+
 	        // Advance month total
 	        $tsdays['total']['logged'] = self::sumTime($tsdays['total']['logged'], $query->getFields('spenttime'));
 
 	        $query->moveNext();
 	    }
-        
+
 	    return $tsdays;
 	}
-	
+
 	// Task related timesheet extractions
-	
+
 	/**
 	 * Returns the total time logged in a task, grouped by timesheet users.
-	 * 
+	 *
 	 * @param string $taskType
 	 * @param string $taskId
 	 */
@@ -500,22 +531,22 @@ class Timesheet extends InnoworkItem
 			 JOIN domain_users AS us ON ts.userid = us.id
 			 WHERE tasktype=".$this->mrDomainDA->formatText($taskType)." AND taskid='".$taskId."'"
 		);
-		
+
 		$users = array();
 		$users['users'] = array();
 		$users['totals']['logged'] = '';
-		
+
 		while (!$query->eof) {
 			$logged_time = $query->getFields('spenttime');
-			
+
 			// Increase the total logged time
 			$users['totals']['logged'] = self::sumTime($logged_time, $users['totals']['logged']);
-			
+
 			// Check if the current user has been already populated in the array
 			if (isset($users['users'][$query->getFields('id')])) {
 				$logged_time = self::sumTime($logged_time, $users['users'][$query->getFields('id')]['spenttime']);
 			}
-			
+
 			// Populate the result query
 			$users['users'][$query->getFields('id')] = array(
 				'spenttime' => $logged_time,
@@ -523,18 +554,18 @@ class Timesheet extends InnoworkItem
 					.((strlen($query->getFields('fname')) and strlen($query->getFields('lname'))) ? ' ' : '')
 					.$query->getFields('lname')
 			);
-			
+
 			$query->moveNext();
 		}
-		
+
 		return $users;
 	}
-	
+
 	// Utility methods
-	
+
 	/**
 	 * Sums two timesheet time entries.
-	 * 
+	 *
 	 * @param string $time1
 	 * @param string $time2
 	 */
@@ -554,7 +585,7 @@ class Timesheet extends InnoworkItem
 		$seconds -= $minutes*60;
 		return sprintf('%d'.self::TIME_SEPARATOR.'%02d', $hours, $minutes);
 	}
-	
+
 	public static function getTimesheetUsers()
 	{
 		return InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess()->execute(
@@ -563,7 +594,7 @@ class Timesheet extends InnoworkItem
 			'WHERE username<>'.InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDataAccess()->formatText(User::getAdminUsername(InnomaticContainer::instance('innomaticcontainer')->getCurrentDomain()->getDomainId())).' '.
 			'ORDER BY lname,fname');
 	}
-	
+
 	public static function getElencoCodiciImponibili()
 	{
 		// @todo remove this sort of method when possible
@@ -577,7 +608,7 @@ class Timesheet extends InnoworkItem
 
 	/**
 	 * Returns a list of the items that are eligible for recording timesheet rows.
-	 * 
+	 *
 	 * @return array
 	 */
 	public static function getSupportedItemTypes()
@@ -587,9 +618,9 @@ class Timesheet extends InnoworkItem
 			\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
 			\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess()
 		);
-		
+
 		$items = $core->getSummaries('', false, array('task'));
-		
+
 		return $items;
 	}
 }
