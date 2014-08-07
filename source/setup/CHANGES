@@ -1,3 +1,14 @@
+1.x.x
+------------------
+NEW FEATURES:
+- Added Innowork ACL support in activities autocomplete. (Alex Pagnoni)
+
+CHANGES:
+- Only not archived items are now returned in the activities autocomplete.
+  (Alex Pagnoni)
+
+
+
 1.2.0 - 2014/07/25
 ------------------
 NEW FEATURES:

@@ -400,31 +400,76 @@ class TimesheetPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     	InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->halt();
     }
 
+    /* public viewSearchtasks($eventData) {{{ */
+    /**
+     * This is an interval view for the activities autocomplete search.
+     *
+     * The search term must be given as "term" event data argument.
+     *
+     * @param array $eventData List of event arguments.
+     * @access public
+     * @return string
+     */
     public function viewSearchtasks($eventData)
     {
-    	$domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
+        $domain_da = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDataAccess();
 
-    	$core = \Innowork\Core\InnoworkCore::instance(
-    		'\Innowork\Core\InnoworkCore',
-    		\Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
-    		$domain_da
-    	);
+        $core = \Innowork\Core\InnoworkCore::instance(
+            '\Innowork\Core\InnoworkCore',
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getDataAccess(),
+            $domain_da
+        );
 
-    	$items = $core->getSummaries('', false, array('task'));
+        // Fetch all the Innowork item types supporting the timesheet
+        $items = $core->getSummaries('', false, array('task'));
 
-    	$k = 0;
-    	foreach ($items as $type => $item) {
-        	$query = $domain_da->execute('SELECT id, title FROM '.$item['table'].' WHERE title LIKE "%'.$_GET['term'].'%"');
+        $k = 0;
 
-        	while (!$query->eof) {
-        		$content[$k]['id'] = $type.'-'.$query->getFields('id');
-        		$content[$k++]['value'] = $item['label'].' '.$query->getFields('id').(strlen($query->getFields('title')) ? ': '.$query->getFields('title') : '');
-        		$query->moveNext();
-        	}
-    	}
-    	echo json_encode($content);
-    	InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->halt();
+        // Keep a cache of the fetched projects
+        $projectsCache = array();
+
+        foreach ($items as $type => $item) {
+            // Search the term for each supported Innowork item type
+            $itemObject = InnoworkCore::getItem($type);
+            $itemSearch = $itemObject->search(array('title' => $_GET['term'], 'done' => $domain_da->fmtfalse));
+
+            // Parse the search results
+            foreach ($itemSearch as $itemValues) {
+                $projectName = '';
+                if (strlen($itemValues['projectid']) and $itemValues['projectid'] != 0) {
+                    // Check if the project has been already fetched
+                    if (isset($projectsCache[$itemValues['projectid']])) {
+                        // Get the project name from the projects cache
+                        $projectName = $projectsCache[$itemValues['projectid']].' - ';
+                    } else {
+                        // Get the project item
+                        $projectItem = InnoworkCore::getItem('project', $itemValues['projectid']);
+                        $projectData = $projectItem->getItem();
+
+                        // Get the project name
+                        $projectName = strlen($projectData['name']) ? $projectData['name'].' - ' : '';
+
+                        // Delete the project item object
+                        unset($projectItem);
+
+                        // Add project name to the projects cache
+                        $projectsCache[$itemValues['projectid']] = $projectData['name'];
+                    }
+                }
+
+                // Build the field string
+                $content[$k]['id'] = $type.'-'.$itemValues['id'];
+                $content[$k++]['value'] = $projectName.$item['label'].' '.$itemValues['id'].(strlen($itemValues['title']) ? ': '.$itemValues['title'] : '');
+            }
+        }
+
+        // Send the search result to the client
+        echo json_encode($content);
+
+        // Gracefully terminate the current Innomatic instance
+        InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->halt();
     }
+    /* }}} */
 
     public function viewPrintuserreport($eventData)
     {
